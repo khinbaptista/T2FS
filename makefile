@@ -1,20 +1,47 @@
+########################################################################
 #
-# Makefile ESQUELETO
+#	INF01142 - Operating Systems
+#		Assignment 2 - File Systems
 #
-# DEVE ter uma regra "all" para geração da biblioteca
-# regra "clean" para remover todos os objetos gerados.
+#	T2FS
 #
-# NECESSARIO adaptar este esqueleto de makefile para suas necessidades.
+#	João Lauro Garibaldi Jr		195505
+#	Khin Baptista				217443
 #
-# 
+#
+########################################################################
 
-CC=gcc
-LIB_DIR=./lib
-INC_DIR=./include
-BIN_DIR=./bin
-SRC_DIR=./src
+LIB = 
 
-all:
+#################################################
+
+CC = gcc
+
+CFLAGS = -Wall
+
+#################################################
+
+LIB_DIR = ./lib
+INC_DIR = ./include
+BIN_DIR = ./bin
+SRC_DIR = ./src
+
+#################################################
+
+SRC = 
+
+OBJ = $(SRC:.c=.o)
+OBJECTS = $(patsubst %, $(BIN_DIR)/%, $(OBJ))
+
+#################################################
+
+all: $(LIB_DIR)/$(LIB)
+
+$(LIB_DIR)/$(LIB): $(OBJECTS)
+	ar crs $@ $^
+	
+$(BIN_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) -c -o $@ $^ -I$(INC_DIR) $(CFLAGS)
 
 clean:
 	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
