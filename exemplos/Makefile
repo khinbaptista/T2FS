@@ -33,7 +33,7 @@ TARGETS = $(SRC:.c=.run)
 all: $(TARGETS)
 
 %.run: %.c
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) -I$(INC_DIR) -L$(LIB_DIR) -lt2fs
 	./$@
 
 clean:
