@@ -11,7 +11,7 @@
 #
 ########################################################################
 
-LIB = 
+LIB = libt2fs.a
 
 #################################################
 
@@ -28,7 +28,7 @@ SRC_DIR = ./src
 
 #################################################
 
-SRC = 
+SRC = main.c
 
 OBJ = $(SRC:.c=.o)
 OBJECTS = $(patsubst %, $(BIN_DIR)/%, $(OBJ))
@@ -45,4 +45,9 @@ $(BIN_DIR)/%.o: $(SRC_DIR)/%.c
 
 clean:
 	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
-
+	
+ex:
+	cd ./exemplos && make
+	
+ex_clean:
+	cd ./exemplos && make clean

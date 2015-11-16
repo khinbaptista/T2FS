@@ -1,3 +1,12 @@
-*.a
+*.o
 *.so
+*.a
+*.pdf
 
+.fuse_hidden*
+
+exemplos/
+!exemplos/*.c
+!exemplos/Makefile
+
+testes/*.run
