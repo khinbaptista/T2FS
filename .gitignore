@@ -10,3 +10,4 @@ exemplos/
 !exemplos/Makefile
 
 testes/*.run
+disks/
