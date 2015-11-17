@@ -27,8 +27,7 @@ void t2fs_readSuperBlock(){
 	read_sector(0, (char *)buffer);
 	
 	memcpy(superblock.Id, buffer, 4);
-	for (int i = 0; i < 4; i++)
-		putchar(superblock.Id[i]);
+	printf(superblock.Id);
 }
 
 void t2fs_init(){
