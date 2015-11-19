@@ -35,18 +35,18 @@ int identify2(char* name, int size){
 	return 0;
 }
 
-int intFromWord(WORD data){
-	int most	= (data ^ 0x00FF) << 1;
-	int least	= (data ^ 0xFF00) >> 1;
+unsigned int intFromWord(WORD data){
+	unsigned int most	= (data ^ 0x00FF) << 1;
+	unsigned int least	= (data ^ 0xFF00) >> 1;
 
 	return most + least;
 }
 
-int intFromDWord(DWORD data){
-	int most		= (data ^ 0x000000FF) << 3;
-	int midmost		= (data ^ 0x0000FF00) << 1;
-	int midleast	= (data ^ 0x00FF0000) >> 1;
-	int least		= (data ^ 0xFF000000) >> 3;
+unsigned int intFromDWord(DWORD data){
+	unsigned int most		= (data ^ 0x000000FF) << 3;
+	unsigned int midmost	= (data ^ 0x0000FF00) << 1;
+	unsigned int midleast	= (data ^ 0x00FF0000) >> 1;
+	unsigned int least		= (data ^ 0xFF000000) >> 3;
 
 	return most + midmost + midleast + least;
 }
@@ -76,7 +76,72 @@ void t2fs_readSuperBlock(){
 	initialized = 1;
 }
 
+FILE2 create2(char *filename){
+	t2fs_init();
+	return 0;
+}
+
 int delete2 (char *filename){
+	t2fs_init();
+	return 0;
+}
+
+FILE2 open2(char *filename){
+	t2fs_init();
+	return 0;
+}
+
+int close2(FILE2 handle){
+	t2fs_init();
+	return 0;
+}
+
+int read2(FILE2 handle, char *buffer, int size){
+	t2fs_init();
+	return 0;
+}
+
+int write2(FILE2 handle, char *buffer, int size){
+	t2fs_init();
+	return 0;
+}
+
+int seek2(FILE2 handler, unsigned int offset){
+	t2fs_init();
+	return 0;
+}
+
+int mkdir2(char *pathname){
+	t2fs_init();
+	return 0;
+}
+
+int rmdir2(char *pathname){
+	t2fs_init();
+	return 0;
+}
+
+DIR2 opendir2(char *pathname){
+	t2fs_init();
+	return 0;
+}
+
+int readdir2(DIR2 handle, DIRENT2 *dentry){
+	t2fs_init();
+	return 0;
+}
+
+int closedir2(DIR2 handle){
+	t2fs_init();
+	return 0;
+}
+
+int chdir2(char *pathname){
+	t2fs_init();
+	return 0;
+}
+
+int getcwd2(char *pathname, int size){
 	t2fs_init();
 	return 0;
 }
