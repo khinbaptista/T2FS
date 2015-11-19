@@ -31,6 +31,8 @@ char* workingdir = "/";
 unsigned int intFromWord(WORD data);
 unsigned int intFromDWord(DWORD data);
 void t2fs_init();
+int dir_exists(char *pathname);
+int file_exists(char *pathname);
 
 // Functions
 int identify2(char* name, int size){
@@ -154,6 +156,12 @@ int closedir2(DIR2 handle){
 
 int chdir2(char *pathname){
 	t2fs_init();
+
+	if (dir_exists(pathname) == 1)
+		workingdir = pathname;
+	else
+		return -1;
+
 	return 0;
 }
 
