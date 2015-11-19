@@ -20,14 +20,27 @@
 #include "apidisk.h"
 #include "t2fs.h"
 
+// Data kept in memory
 struct t2fs_superbloco superblock;
+int open_files[20] = { -1 };
 int initialized = 0;
 
-int identify2(char* name, int size){
-	char id[] = "JoaoLauro_KhinBaptista\0";
+char* workingdir = "/";
 
-	size = 23;
-	memcpy(name, id, size);
+// Helper functions
+unsigned int intFromWord(WORD data);
+unsigned int intFromDWord(DWORD data);
+void t2fs_init();
+
+// Functions
+int identify2(char* name, int size){
+	char *id = "JoaoLauro195505_KhinBaptista217443\0";	//35
+
+	if (size > 35)
+		memcpy(name, id, 35);
+	else
+		memcpy(name, id, size);
+
 	puts(name);
 
 	t2fs_init();
@@ -74,6 +87,9 @@ void t2fs_readSuperBlock(){
 	memcpy(superblock.NofDirEntries,	buffer + 36,	4);
 
 	initialized = 1;
+
+	printf("Superblock size: %d (no conversion) | %d (with conversion)\n\n",
+		superblock.SuperBlockSize, intFromWord(superblock.SuperBlockSize));
 }
 
 FILE2 create2(char *filename){
