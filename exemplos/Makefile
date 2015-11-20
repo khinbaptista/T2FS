@@ -24,7 +24,7 @@ BIN_DIR = ../bin
 #################################################
 # Each source must be a complete program with a test
 
-SRC = hello.c hello2.c
+SRC = hello.c
 
 TARGETS = $(SRC:.c=.run)
 

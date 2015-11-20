@@ -4,8 +4,10 @@
 #include "t2fs.h"
 
 int main(int argc, char* argv[]){
-	delete2("");
-	printf("\n\n");
+	char ids[40];
+
+	identify2(ids, 40);
+	printf("%s\n\n", ids);
 	
 	return 0;
 }

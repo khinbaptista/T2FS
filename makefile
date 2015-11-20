@@ -46,8 +46,8 @@ $(BIN_DIR)/%.o: $(SRC_DIR)/%.c
 clean:
 	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
 	
-ex:
-	cd ./exemplos && make
+ex: $(LIB_DIR)/$(LIB)
+	cd ./exemplos && make clean && make
 	
 ex_clean:
 	cd ./exemplos && make clean

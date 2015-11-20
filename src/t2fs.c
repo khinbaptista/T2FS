@@ -35,17 +35,14 @@ int file_exists(char *pathname);
 
 // Functions
 int identify2(char* name, int size){
-	char *id = "JoaoLauro195505_KhinBaptista217443\0";	//35
+	char *id = "Joao Lauro 195505 | Khin Baptista 217443";	//40
 
-	if (size > 35)
-		memcpy(name, id, 35);
+	if (size >= 40)
+		memcpy(name, id, 40);
 	else
 		memcpy(name, id, size);
 
-	puts(name);
-
 	t2fs_init();
-
 	return 0;
 }
 
