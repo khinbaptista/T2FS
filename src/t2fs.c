@@ -27,10 +27,9 @@ int initialized = 0;
 
 char* workingdir = "/";
 
-// Helper functions
-unsigned int intFromWord(WORD data);
-unsigned int intFromDWord(DWORD data);
+// Helper functions prototypes
 void t2fs_init();
+void t2fs_readSuperblock();
 int dir_exists(char *pathname);
 int file_exists(char *pathname);
 
@@ -50,48 +49,33 @@ int identify2(char* name, int size){
 	return 0;
 }
 
-unsigned int intFromWord(WORD data){
-	unsigned int most	= (data ^ 0x00FF) << 1;
-	unsigned int least	= (data ^ 0xFF00) >> 1;
-
-	return most + least;
-}
-
-unsigned int intFromDWord(DWORD data){
-	unsigned int most		= (data ^ 0x000000FF) << 3;
-	unsigned int midmost	= (data ^ 0x0000FF00) << 1;
-	unsigned int midleast	= (data ^ 0x00FF0000) >> 1;
-	unsigned int least		= (data ^ 0xFF000000) >> 3;
-
-	return most + midmost + midleast + least;
-}
-
 void t2fs_init(){
 	if (initialized == 0){
-		t2fs_readSuperBlock();
+		t2fs_readSuperblock();
 	}
 }
 
-void t2fs_readSuperBlock(){
+void t2fs_readSuperblock(){
 	BYTE buffer[SECTOR_SIZE];
 	read_sector(0, (char *)buffer);
 
-	memcpy(superblock.Id,				buffer,			4);
-	memcpy(superblock.Version,			buffer + 4,		2);
-	memcpy(superblock.SuperBlockSize,	buffer + 6,		2);
-	memcpy(superblock.DiskSize,			buffer + 8,		4);
-	memcpy(superblock.NofSectors,		buffer + 12,	4);
-	memcpy(superblock.SectorPerCluster,	buffer + 16,	4);
-	memcpy(superblock.pFATSectorStart,	buffer + 20,	4);
-	memcpy(superblock.sFATSectorStart,	buffer + 24,	4);
-	memcpy(superblock.RootSectorStart,	buffer + 28,	4);
-	memcpy(superblock.DataSectorStart,	buffer + 32,	4);
-	memcpy(superblock.NofDirEntries,	buffer + 36,	4);
+	memcpy(&superblock.Id,					buffer,			4);
+	memcpy(&superblock.Version,				buffer + 4,		2);
+	memcpy(&superblock.SuperBlockSize,		buffer + 6,		2);
+	memcpy(&superblock.DiskSize,			buffer + 8,		4);
+	memcpy(&superblock.NofSectors,			buffer + 12,	4);
+	memcpy(&superblock.SectorPerCluster,	buffer + 16,	4);
+	memcpy(&superblock.pFATSectorStart,		buffer + 20,	4);
+	memcpy(&superblock.sFATSectorStart,		buffer + 24,	4);
+	memcpy(&superblock.RootSectorStart,		buffer + 28,	4);
+	memcpy(&superblock.DataSectorStart,		buffer + 32,	4);
+	memcpy(&superblock.NofDirEntries,		buffer + 36,	4);
 
 	initialized = 1;
+}
 
-	printf("Superblock size: %d (no conversion) | %d (with conversion)\n\n",
-		superblock.SuperBlockSize, intFromWord(superblock.SuperBlockSize));
+int dir_exists(char *pathname){
+	return -1;
 }
 
 FILE2 create2(char *filename){
