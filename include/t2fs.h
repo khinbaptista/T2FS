@@ -45,7 +45,7 @@ typedef struct {
     char name[MAX_FILE_NAME_SIZE+1];	/* Nome do arquivo, conforme aparece na entrada de diret�rio */
     int fileType;                       /* Indica se � arquivo (0) ou diret�rio (1) */
     unsigned long fileSize;             /* N�mero de bytes do arquivo */
-} DIRENT2;  // directory entry
+} DIRENT2;
 
 
 /*-----------------------------------------------------------------------------
@@ -54,10 +54,10 @@ Fun��o: Usada para identificar os desenvolvedores do T2FS.
 		Essa c�pia n�o pode exceder o tamanho do buffer, informado pelo par�metro "size".
 		O string deve ser formado apenas por caracteres ASCII (Valores entre 0x20 e 0x7A) e terminado por �\0�.
 		O string deve conter o nome e n�mero do cart�o dos participantes do grupo.
-		
+
 Entra:	name -> buffer onde colocar o string de identifica��o.
 		size -> tamanho do buffer "name" (n�mero m�ximo de bytes a serem copiados).
-		
+
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
@@ -71,7 +71,7 @@ Fun��o: Criar um novo arquivo.
 		Caso j� exista um arquivo ou diret�rio com o mesmo nome, a fun��o dever� retornar um erro de cria��o.
 		A fun��o deve retornar o identificador (handle) do arquivo.
 		Esse handle ser� usado em chamadas posteriores do sistema de arquivo para fins de manipula��o do arquivo criado.
-		
+
 Entra:	filename -> nome do arquivo a ser criado.
 
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o handle do arquivo (n�mero positivo).
@@ -83,7 +83,7 @@ FILE2 create2 (char *filename);
 /*-----------------------------------------------------------------------------
 Fun��o:	Apagar um arquivo do disco.
 		O nome do arquivo a ser apagado � aquele informado pelo par�metro "filename".
-		
+
 Entra:	filename -> nome do arquivo a ser apagado.
 
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
@@ -100,7 +100,7 @@ Fun��o:	Abre um arquivo existente no disco.
 		Esse handle ser� usado em chamadas posteriores do sistema de arquivo para fins de manipula��o do arquivo criado.
 		Todos os arquivos abertos por esta chamada s�o abertos em leitura e em escrita.
 		O ponto em que a leitura, ou escrita, ser� realizada � fornecido pelo valor current_pointer (ver fun��o seek2).
-		
+
 Entra:	filename -> nome do arquivo a ser apagado.
 
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o handle do arquivo (n�mero positivo)
@@ -140,11 +140,11 @@ int read2 (FILE2 handle, char *buffer, int size);
 Fun��o:	Realiza a escrita de "size" bytes no arquivo identificado por "handle".
 		Os bytes a serem escritos est�o na �rea apontada por "buffer".
 		Ap�s a escrita, o contador de posi��o (current pointer) deve ser ajustado para o byte seguinte ao �ltimo escrito.
-		
+
 Entra:	handle -> identificador do arquivo a ser escrito
 		buffer -> buffer de onde pegar os bytes a serem escritos no arquivo
 		size -> n�mero de bytes a serem escritos
-		
+
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna o n�mero de bytes efetivamente escritos.
 		Em caso de erro, ser� retornado um valor negativo.
 -----------------------------------------------------------------------------*/
@@ -157,10 +157,10 @@ Fun��o:	Reposiciona o contador de posi��es (current pointer) do arquivo 
 		O par�metro "offset" corresponde ao deslocamento, em bytes, contados a partir do in�cio do arquivo.
 		Se o valor de "offset" for "-1", o current_pointer dever� ser posicionado no byte seguinte ao final do arquivo,
 			Isso � �til para permitir que novos dados sejam adicionados no final de um arquivo j� existente.
-			
+
 Entra:	handle -> identificador do arquivo a ser escrito
 		offset -> deslocamento, em bytes, onde posicionar o "current pointer".
-			
+
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
@@ -195,7 +195,7 @@ Fun��o:	Apagar um subdiret�rio do disco.
 				(c) algum dos componentes do "pathname" n�o existe (caminho inv�lido);
 				(d) o "pathname" indicado n�o � um arquivo;
 				(e) o "pathname" indica os diret�rios "." ou "..".
-		
+
 Entra:	pathname -> caminho do diret�rio a ser criado
 
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
@@ -231,7 +231,7 @@ Fun��o:	Realiza a leitura das entradas do diret�rio identificado por "hand
 
 Entra:	handle -> identificador do diret�rio cujas entradas deseja-se ler.
 		dentry -> estrutura de dados onde a fun��o coloca as informa��es da entrada lida.
-		
+
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
 		Em caso de erro, ser� retornado um valor diferente de zero ( e "dentry" n�o ser� v�lido)
 -----------------------------------------------------------------------------*/
@@ -274,7 +274,7 @@ Fun��o:	Informa o diret�rio atual de trabalho.
 
 Entra:	pathname -> buffer para onde copiar o pathname do diret�rio de trabalho
 		size -> tamanho do buffer pathname
-		
+
 Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
 		Em caso de erro, ser� retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/

@@ -13,7 +13,5 @@ int main(int argc, char* argv[]){
 	if (getcwd2(wd, 20) == 0)
 		printf("Current working directory is \"%s\"\n\n", wd);
 
-	opendir2("/nigga/./llama/acotr/./hector");
-
 	return 0;
 }

@@ -20,16 +20,24 @@
 #include "apidisk.h"
 #include "t2fs.h"
 
+typedef struct t2fs_record Record;
+
 // Data kept in memory
 struct t2fs_superbloco superblock;
-int open_files[20] = { -1 };
+int clusterSize;
+int clusterCount;
+int fatSize;
+
 int initialized = 0;
 
 char *workingdir;
+Record* open_files[20];
+BYTE* open_clusters[20];
 
 // Helper functions prototypes
 void t2fs_init();
 void t2fs_readSuperblock();
+BYTE* ReadCluster(int clusterIndex);
 int DirExists(char *pathname);
 int FileExists(char *pathname);
 
@@ -50,7 +58,10 @@ int identify2(char* name, int size){
 
 void t2fs_init(){
 	if (initialized == 0){
+		workingdir = "/";
 		t2fs_readSuperblock();
+
+		initialized = 1;
 	}
 }
 
@@ -70,16 +81,38 @@ void t2fs_readSuperblock(){
 	memcpy(&superblock.DataSectorStart,		buffer + 32,	4);
 	memcpy(&superblock.NofDirEntries,		buffer + 36,	4);
 
-	workingdir = "/";
-	initialized = 1;
+	clusterSize	= SECTOR_SIZE * superblock.SectorPerCluster;
+	clusterCount = (superblock.DiskSize - superblock.DataSectorStart) / clusterSize;
+	fatSize 	= clusterCount * 16;
 }
 
 int DirExists(char *pathname){
-	return -1;
+	char *path = AbsolutePath(pathname);
+	char *step;
+
+	BYTE data[SECTOR_SIZE];
+	Record buffer;
+
+	if (path == NULL)
+		return 0;
+
+	if  (strlen(path) == 1 && path[0] == '/')
+		return 1;
+
+	step = strtok(path, "/");
+
+	while (step != NULL){
+		read_sector(superblock.RootSectorStart, (char *)data);
+		memcpy(&buffer, data, sizeof(Record));
+
+		// incomplete
+	}
+
+	return 0;
 }
 
 int FileExists(char *pathname){
-	return -1;
+	return 0;
 }
 
 char* AbsolutePath(char *pathname){
@@ -101,7 +134,7 @@ char* AbsolutePath(char *pathname){
 	memcpy(buffer, pathname, pathlength);
 
 	token = strtok(buffer, "/");
-	
+
 	while(token != NULL){
 		if (strcmp(token, ".") == 0){
 			// current directory
@@ -127,6 +160,19 @@ char* AbsolutePath(char *pathname){
 	}
 
 	return absolute;
+}
+
+BYTE* ReadCluster(int cluster){
+	BYTE buffer[clusterSize];
+	int it;
+
+	if (cluster < 0 || cluster > clusterCount)
+		return NULL;
+
+	for (it = 0; it < superblock.SectorPerCluster; it++) {
+		read_sector(superblock.DataSectorStart + cluster
+			* superblock.SectorPerCluster + it, buffer + it * SECTOR_SIZE)
+	}
 }
 
 FILE2 create2(char *filename){
@@ -185,6 +231,13 @@ DIR2 opendir2(char *pathname){
 
 int readdir2(DIR2 handle, DIRENT2 *dentry){
 	t2fs_init();
+
+	if (open_files[handle] == NULL ||
+			open_files[handle].TypeVal != TYPEVAL_DIRETORIO)
+		return -1;
+
+	BYTE *buffer = ReadCluster(open_files[handle].firstCluster);
+
 	return 0;
 }
 
