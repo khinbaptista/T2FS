@@ -27,7 +27,7 @@ SRC_DIR = ./src
 
 #################################################
 
-SRC = t2fs.c
+SRC = t2fs.c helper.c
 
 OBJ = $(SRC:.c=.o)
 OBJECTS = $(patsubst %, $(BIN_DIR)/%, $(OBJ))
@@ -39,15 +39,15 @@ all: $(LIB_DIR)/$(LIB)
 
 $(LIB_DIR)/$(LIB): $(OBJECTS)
 	ar crs $@ $^
-	
+
 $(BIN_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c -o $@ $^ -I$(INC_DIR) $(CFLAGS)
 
 clean:
 	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
-	
+
 ex: $(LIB_DIR)/$(LIB)
 	cd ./exemplos && make clean && make
-	
+
 ex_clean:
 	cd ./exemplos && make clean
