@@ -27,7 +27,7 @@ SRC_DIR = ./src
 
 #################################################
 
-SRC = t2fs.c helper.c
+SRC = t2fs.c
 
 OBJ = $(SRC:.c=.o)
 OBJECTS = $(patsubst %, $(BIN_DIR)/%, $(OBJ))
