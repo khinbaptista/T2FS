@@ -25,7 +25,7 @@ struct t2fs_superbloco superblock;
 int open_files[20] = { -1 };
 int initialized = 0;
 
-char* workingdir = "/";
+char *workingdir;
 
 // Helper functions prototypes
 void t2fs_init();
@@ -70,6 +70,7 @@ void t2fs_readSuperblock(){
 	memcpy(&superblock.DataSectorStart,		buffer + 32,	4);
 	memcpy(&superblock.NofDirEntries,		buffer + 36,	4);
 
+	workingdir = "/";
 	initialized = 1;
 }
 
@@ -83,20 +84,24 @@ int FileExists(char *pathname){
 
 char* AbsolutePath(char *pathname){
 	int wdirlength = strlen(workingdir);
+	int pathlength = strlen(pathname);
 	int it;
+	char *buffer = malloc(pathlength);
 	char *token;
-	char absolute[wdirlength + strlen(pathname)];
+	char *absolute = malloc(wdirlength + pathlength);
 
-	if (pathname[0] == '/')
-		return pathname;
-
-	if (pathname[0] != '.')
+	if (pathname[0] != '.' && pathname[0] != '/')
 		return NULL;
 
-	memcpy(absolute, workingdir, wdirlength);
+	if (pathname[0] == '/')
+		absolute[0] = '/';
+	else
+		memcpy(absolute, workingdir, wdirlength);
 
-	token = strtok(pathname, "/");
+	memcpy(buffer, pathname, pathlength);
 
+	token = strtok(buffer, "/");
+	
 	while(token != NULL){
 		if (strcmp(token, ".") == 0){
 			// current directory
@@ -104,7 +109,7 @@ char* AbsolutePath(char *pathname){
 		}
 		else if (strcmp(token, "..") == 0){
 			// one up
-			it = strlen(absolute) - 1;
+			it = strlen(absolute) - 2;
 			while (absolute[it] != '/' && it >= 0) it--;
 			if (it >= 0){
 				absolute[it + 1] = '\0';
@@ -116,6 +121,8 @@ char* AbsolutePath(char *pathname){
 		else {
 			strcat(absolute, token);
 			strcat(absolute, "/");
+
+			token = strtok(NULL, "/");
 		}
 	}
 
@@ -168,9 +175,11 @@ int rmdir2(char *pathname){
 }
 
 DIR2 opendir2(char *pathname){
-	//t2fs_init();
+	t2fs_init();
 
-	puts(AbsolutePath(pathname));
+	char *abs = AbsolutePath(pathname);
+
+	puts(abs);
 	return 0;
 }
 
