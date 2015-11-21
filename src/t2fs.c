@@ -203,7 +203,7 @@ char* AbsolutePath(char *pathname){
 }
 
 BYTE* ReadCluster(int cluster){
-	BYTE buffer[clusterSize];
+	BYTE *buffer = malloc(clusterSize);
 	int it;
 
 	if (cluster < 2 || cluster > clusterCount)
