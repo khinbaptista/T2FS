@@ -171,8 +171,10 @@ BYTE* ReadCluster(int cluster){
 
 	for (it = 0; it < superblock.SectorPerCluster; it++) {
 		read_sector(superblock.DataSectorStart + cluster
-			* superblock.SectorPerCluster + it, buffer + it * SECTOR_SIZE)
+			* superblock.SectorPerCluster + it, (char *)(buffer + it * SECTOR_SIZE));
 	}
+
+	return NULL;
 }
 
 FILE2 create2(char *filename){
@@ -233,10 +235,10 @@ int readdir2(DIR2 handle, DIRENT2 *dentry){
 	t2fs_init();
 
 	if (open_files[handle] == NULL ||
-			open_files[handle].TypeVal != TYPEVAL_DIRETORIO)
+			open_files[handle]->TypeVal != TYPEVAL_DIRETORIO)
 		return -1;
 
-	BYTE *buffer = ReadCluster(open_files[handle].firstCluster);
+	//BYTE *buffer = ReadCluster(open_files[handle]->firstCluster);
 
 	return 0;
 }
