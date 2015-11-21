@@ -13,42 +13,59 @@
 ########################################################################
 */
 
+// ########################################
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "apidisk.h"
 #include "t2fs.h"
+#include "helper.h"
+
+// ########################################
+
+#define MAX_OPEN_FILES 20
 
 typedef struct t2fs_record Record;
 
-// Data kept in memory
-struct t2fs_superbloco superblock;
-int clusterSize;
-int clusterCount;
-int fatSize;
+// ########################################
+/* Data kept in memory */
 
 int initialized = 0;
 
-char *workingdir;
-Record* open_files[20];
-BYTE* open_clusters[20];
+struct t2fs_superbloco superblock;
+BYTE* fat;
 
-// Helper functions prototypes
-void t2fs_init();
-void t2fs_readSuperblock();
+int clusterSize;
+int clusterCount;
+int fatSize;
+int fatSectorCount;
 
-BYTE* ReadCluster(int clusterIndex);
-int DirExists(char *pathname);
-int FileExists(char *pathname);
-char* AbsolutePath(char *pathname); // returns the absolute path or NULL on failure
+// String of the current work directory
+char* workdir;
 
-// Functions
+// record of open files
+Record* open_files[MAX_OPEN_FILES];
+
+// one cluster open for each file
+BYTE* open_clusters[MAX_OPEN_FILES];
+
+// offset of file inside open clluster
+int open_offsetcluster[MAX_OPEN_FILES];
+
+// offset of open file relative to file start
+int open_offset[MAX_OPEN_FILES];
+
+// ########################################
+/* Functions */
+
 int identify2(char* name, int size){
-	char *id = "Joao Lauro 195505 | Khin Baptista 217443";	//40
+	char id[] = "Joao Lauro 195505 | Khin Baptista 217443";
+	int length = strlen(id);
 
-	if (size >= 40)
-		memcpy(name, id, 40);
+	if (size >= length)
+		memcpy(name, id, length);
 	else
 		memcpy(name, id, size);
 
@@ -58,8 +75,9 @@ int identify2(char* name, int size){
 
 void t2fs_init(){
 	if (initialized == 0){
-		workingdir = "/";
+		workdir = "/";
 		t2fs_readSuperblock();
+		t2fs_readFAT();
 
 		initialized = 1;
 	}
@@ -67,7 +85,7 @@ void t2fs_init(){
 
 void t2fs_readSuperblock(){
 	BYTE buffer[SECTOR_SIZE];
-	read_sector(0, (char *)buffer);
+	read_sector(0, (char*)buffer);
 
 	memcpy(&superblock.Id,					buffer,			4);
 	memcpy(&superblock.Version,				buffer + 4,		2);
@@ -81,9 +99,31 @@ void t2fs_readSuperblock(){
 	memcpy(&superblock.DataSectorStart,		buffer + 32,	4);
 	memcpy(&superblock.NofDirEntries,		buffer + 36,	4);
 
-	clusterSize	= SECTOR_SIZE * superblock.SectorPerCluster;
-	clusterCount = (superblock.DiskSize - superblock.DataSectorStart) / clusterSize;
-	fatSize 	= clusterCount * 16;
+	clusterSize		= SECTOR_SIZE * superblock.SectorPerCluster;
+
+	clusterCount	=
+		(superblock.DiskSize - superblock.DataSectorStart) / clusterSize;
+
+	fatSize 		= clusterCount * 16;
+	fatSectorCount	= fatSize / SECTOR_SIZE;
+
+	if (fatSize % SECTOR_SIZE != 0) fatSectorCount++;
+}
+
+void t2fs_ReadFAT(){
+	int it;
+	BYTE buffer[SECTOR_SIZE];
+
+	fat = malloc(fatSize);
+
+	for(it = 0; it < fatSectorCount; it++){
+		read_sector(superblock.pFATSectorStart + it, (char*)buffer);
+		memcpy(fat + it * SECTOR_SIZE, buffer, SECTOR_SIZE);
+	}
+}
+
+WORD FAT(int cluster){
+	return fat[(cluster - 2) * 16];
 }
 
 int DirExists(char *pathname){
@@ -116,7 +156,7 @@ int FileExists(char *pathname){
 }
 
 char* AbsolutePath(char *pathname){
-	int wdirlength = strlen(workingdir);
+	int wdirlength = strlen(workdir);
 	int pathlength = strlen(pathname);
 	int it;
 	char *buffer = malloc(pathlength);
@@ -129,7 +169,7 @@ char* AbsolutePath(char *pathname){
 	if (pathname[0] == '/')
 		absolute[0] = '/';
 	else
-		memcpy(absolute, workingdir, wdirlength);
+		memcpy(absolute, workdir, wdirlength);
 
 	memcpy(buffer, pathname, pathlength);
 
@@ -166,15 +206,18 @@ BYTE* ReadCluster(int cluster){
 	BYTE buffer[clusterSize];
 	int it;
 
-	if (cluster < 0 || cluster > clusterCount)
+	if (cluster < 2 || cluster > clusterCount)
 		return NULL;
 
+	cluster -= 2;
+
 	for (it = 0; it < superblock.SectorPerCluster; it++) {
-		read_sector(superblock.DataSectorStart + cluster
-			* superblock.SectorPerCluster + it, (char *)(buffer + it * SECTOR_SIZE));
+		read_sector(superblock.DataSectorStart + cluster *
+					superblock.SectorPerCluster + it,
+					(char *)(buffer + it * SECTOR_SIZE));
 	}
 
-	return NULL;
+	return buffer;
 }
 
 FILE2 create2(char *filename){
@@ -252,7 +295,7 @@ int chdir2(char *pathname){
 	t2fs_init();
 
 	if (DirExists(pathname) == 1)
-		workingdir = AbsolutePath(pathname);
+		workdir = AbsolutePath(pathname);
 	else
 		return -1;
 
@@ -261,10 +304,10 @@ int chdir2(char *pathname){
 
 int getcwd2(char *pathname, int size){
 	t2fs_init();
-	int length = strlen(workingdir);
+	int length = strlen(workdir);
 
 	if (size >= length)
-		memcpy(pathname, workingdir, length);
+		memcpy(pathname, workdir, length);
 	else
 		return -1;
 
