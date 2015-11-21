@@ -102,7 +102,7 @@ void t2fs_readSuperblock(){
 	clusterSize		= SECTOR_SIZE * sb.SectorPerCluster;
 
 	clusterCount	=
-		(sb.DiskSize - sb.DataSectorStart) / clusterSize;
+		(int)((sb.DiskSize - sb.DataSectorStart) / clusterSize);
 
 	fatSize 		= clusterCount * 16;
 	fatSectorCount	= fatSize / SECTOR_SIZE;
@@ -110,10 +110,10 @@ void t2fs_readSuperblock(){
 	if (fatSize % SECTOR_SIZE != 0) fatSectorCount++;
 
 	printf("Cluster size: %d\nCluster count: %d\n", clusterSize, clusterCount);
-	printf("FAT size: %d, takes %d sectors\n");
+	printf("FAT size: %d, takes %d sectors\n", fatSize, fatSectorCount);
 }
 
-void t2fs_ReadFAT(){
+void t2fs_readFAT(){
 	int it;
 	BYTE buffer[SECTOR_SIZE];
 
@@ -299,7 +299,7 @@ int closedir2(DIR2 handle){
 int chdir2(char *pathname){
 	t2fs_init();
 
-	if (DirExists(pathname) == 1)
+	if (file_exists(pathname, TYPEVAL_REGULAR) == 1)
 		workdir = absolute_path(pathname);
 	else
 		return -1;
