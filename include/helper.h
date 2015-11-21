@@ -12,16 +12,13 @@ void t2fs_readSuperblock();
 void t2fs_readFAT();
 
 // Reads a cluster and returns the data
-BYTE* ReadCluster(int clusterIndex);
-
-// Checks whether a directory exists (0: false; 1: true)
-int DirExists(char *pathname);
+BYTE* read_cluster(int clusterIndex);
 
 // Checks whether a file exists (0: false; 1: true)
-int FileExists(char *pathname);
+int file_exists(char *pathname, BYTE typeVal);
 
 // Converts a path to absolute path (returns NULL on failure)
-char* AbsolutePath(char *pathname);
+char* absolute_path(char *pathname);
 
 // Returns the value of a cluster in the FAT
 WORD FAT(int cluster);
