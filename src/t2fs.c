@@ -81,6 +81,10 @@ int FileExists(char *pathname){
 	return -1;
 }
 
+char* AbsolutePath(char *pathname){
+	return pathname;
+}
+
 FILE2 create2(char *filename){
 	t2fs_init();
 	return 0;
@@ -144,7 +148,7 @@ int closedir2(DIR2 handle){
 int chdir2(char *pathname){
 	t2fs_init();
 
-	if (dir_exists(pathname) == 1)
+	if (DirExists(pathname) == 1)
 		workingdir = AbsolutePath(pathname);
 	else
 		return -1;

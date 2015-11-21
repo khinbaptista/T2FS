@@ -8,10 +8,10 @@ int main(int argc, char* argv[]){
 	char wd[20];
 
 	identify2(ids, 40);
-	printf("%s\n\n", ids);
+	printf("\n%s\n", ids);
 
 	if (getcwd2(wd, 20) == 0)
-		printf("Current working directory is \"%s\"", wd);
+		printf("Current working directory is \"%s\"\n\n", wd);
 
 	return 0;
 }
