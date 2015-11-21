@@ -30,8 +30,10 @@ char* workingdir = "/";
 // Helper functions prototypes
 void t2fs_init();
 void t2fs_readSuperblock();
-int dir_exists(char *pathname);
-int file_exists(char *pathname);
+int DirExists(char *pathname);
+int FileExists(char *pathname);
+
+char* AbsolutePath(char *pathname); // returns the absolute path
 
 // Functions
 int identify2(char* name, int size){
@@ -71,7 +73,11 @@ void t2fs_readSuperblock(){
 	initialized = 1;
 }
 
-int dir_exists(char *pathname){
+int DirExists(char *pathname){
+	return -1;
+}
+
+int FileExists(char *pathname){
 	return -1;
 }
 
@@ -139,7 +145,7 @@ int chdir2(char *pathname){
 	t2fs_init();
 
 	if (dir_exists(pathname) == 1)
-		workingdir = pathname;
+		workingdir = AbsolutePath(pathname);
 	else
 		return -1;
 
@@ -148,5 +154,12 @@ int chdir2(char *pathname){
 
 int getcwd2(char *pathname, int size){
 	t2fs_init();
+	int length = strlen(workingdir);
+
+	if (size >= length)
+		memcpy(pathname, workingdir, length);
+	else
+		return -1;
+
 	return 0;
 }
