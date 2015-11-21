@@ -33,7 +33,7 @@ void t2fs_readSuperblock();
 int DirExists(char *pathname);
 int FileExists(char *pathname);
 
-char* AbsolutePath(char *pathname); // returns the absolute path
+char* AbsolutePath(char *pathname); // returns the absolute path or NULL on failure
 
 // Functions
 int identify2(char* name, int size){
@@ -82,7 +82,44 @@ int FileExists(char *pathname){
 }
 
 char* AbsolutePath(char *pathname){
-	return pathname;
+	int wdirlength = strlen(workingdir);
+	int it;
+	char *token;
+	char absolute[wdirlength + strlen(pathname)];
+
+	if (pathname[0] == '/')
+		return pathname;
+
+	if (pathname[0] != '.')
+		return NULL;
+
+	memcpy(absolute, workingdir, wdirlength);
+
+	token = strtok(pathname, "/");
+
+	while(token != NULL){
+		if (strcmp(token, ".") == 0){
+			// current directory
+			token = strtok(NULL, "/");
+		}
+		else if (strcmp(token, "..") == 0){
+			// one up
+			it = strlen(absolute) - 1;
+			while (absolute[it] != '/' && it >= 0) it--;
+			if (it >= 0){
+				absolute[it + 1] = '\0';
+				token = strtok(NULL, "/");
+			}
+			else
+				token = NULL;
+		}
+		else {
+			strcat(absolute, token);
+			strcat(absolute, "/");
+		}
+	}
+
+	return absolute;
 }
 
 FILE2 create2(char *filename){
@@ -131,7 +168,9 @@ int rmdir2(char *pathname){
 }
 
 DIR2 opendir2(char *pathname){
-	t2fs_init();
+	//t2fs_init();
+
+	puts(AbsolutePath(pathname));
 	return 0;
 }
 
