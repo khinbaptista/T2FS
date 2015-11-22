@@ -1,5 +1,4 @@
-/*
-########################################################################
+/* ########################################################################
 #
 #		INF01142 - Operating Systems
 #			Assignment 2 - File Systems
@@ -10,10 +9,7 @@
 #		Khin Baptista				217443
 #
 #
-########################################################################
-*/
-
-// ########################################
+######################################################################## */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,13 +19,11 @@
 #include "t2fs.h"
 #include "helper.h"
 
-// ########################################
+/* ######################################## */
 
 #define MAX_OPEN_FILES 20
 
-typedef struct t2fs_record RECORD;
-
-// ########################################
+/* ######################################## */
 /* Data kept in memory */
 
 int initialized = 0;
@@ -46,18 +40,18 @@ int fatSectorCount;
 char* workdir;
 
 // record of open files
-RECORD* open_files[MAX_OPEN_FILES];
+RECORD* open_files[MAX_OPEN_FILES] = { NULL };
 
 // one cluster open for each file
-BYTE* open_clusters[MAX_OPEN_FILES];
+BYTE* open_clusters[MAX_OPEN_FILES] = { NULL };
 
 // offset of file inside open clluster
-int open_offsetcluster[MAX_OPEN_FILES];
+int open_offsetcluster[MAX_OPEN_FILES] = { 0 };
 
 // offset of open file relative to file start
-int open_offset[MAX_OPEN_FILES];
+int open_offset[MAX_OPEN_FILES] = { 0 };
 
-// ########################################
+/* ######################################## */
 /* Functions */
 
 int identify2(char* name, int size){
@@ -67,8 +61,8 @@ int identify2(char* name, int size){
 	if (size >= length)
 		strcpy(name, id);
 	else
-		return 1;
-	
+		return -1;
+
 	t2fs_init();
 	return 0;
 }
@@ -78,7 +72,7 @@ void t2fs_init(){
 		workdir = "/";
 		t2fs_readSuperblock();
 		t2fs_readFAT();
-		
+
 		initialized = 1;
 		puts("T2FS INITIALIZED OK\n");
 	}
@@ -115,7 +109,7 @@ void t2fs_readSuperblock(){
 
 	printf("Sector size: %d\tSectors per cluster: %d\n",
 		SECTOR_SIZE, sb.SectorPerCluster);
-	
+
 	printf("Cluster size: %d\tCluster count: %d\n", clusterSize, clusterCount);
 	printf("FAT size: %d, takes %d sectors\n", fatSize, fatSectorCount);
 }
@@ -341,16 +335,46 @@ int rmdir2(char *pathname){
 
 DIR2 opendir2(char *pathname){
 	t2fs_init();
-	//int handler = generate_handler();
-	//char *path = absolute_path(pathname);
 
-	return 0;
+	int handler = -1;
+	int i, i2, cluster;
+	char *path = absolute_path(pathname);
+	char* token;
+
+	RECORD* _record;
+
+	token = strtok(path, "/");
+	_record = find_root_subpath(token, TYPEVAL_DIRETORIO);
+	if (_record == NULL)	// maybe this is not necessary
+		return -1;
+
+	token = strtok(NULL, "/");
+
+	while(token != NULL && _record != NULL){
+		find_record_subpath(_record, token, TYPEVAL_DIRETORIO);
+		token = strtok(NULL, "/");
+	}
+
+	if (token == NULL && _record != NULL){	// found it!
+		handler = generate_handler();
+
+		if (handler >= 0){
+			open_files[handler] = malloc(sizeof(RECORD));
+			memcpy(open_files[handler], _record, sizeof(RECORD));
+
+			open_offset[handler]		= 0;
+			open_offsetcluster[handler]	= 0;
+		}
+	}
+
+	free(_record);
+	return handler;
 }
 
 int readdir2(DIR2 handle, DIRENT2 *dentry){
 	t2fs_init();
 
-	if (open_files[handle] == NULL ||
+	if (handle < 0 || handle >= MAX_OPEN_FILES || open_files[handle] == NULL ||
 			open_files[handle]->TypeVal != TYPEVAL_DIRETORIO)
 		return -1;
 
