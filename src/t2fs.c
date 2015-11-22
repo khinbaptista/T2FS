@@ -259,6 +259,18 @@ char* absolute_path(char *pathname){
 	return absolute;
 }
 
+int generate_handler(){
+	int it;
+	int index = -1;
+
+	for (it = 0; it < MAX_OPEN_FILES && index == -1; it++){
+		if (open_files[it] == NULL)
+			index = it;
+	}
+
+	return index;
+}
+
 BYTE* read_cluster(int cluster){
 	BYTE *buffer = malloc(clusterSize);
 	int it;
@@ -276,16 +288,39 @@ BYTE* read_cluster(int cluster){
 	return buffer;
 }
 
-int generate_handler(){
-	int it;
-	int index = -1;
+RECORD* find_root_subpath(char* subpath, BYTE typeval){
+	RECORD* result	= NULL, buffer	= NULL;
+	BYTE* sector	= NULL;
 
-	for (it = 0; it < MAX_OPEN_FILES && index == -1; it++){
-		if (open_files[it] == NULL)
-			index = it;
+	int i_entry, i_sector	= 0;	// indexes
+	int counter 			= 0;	// entries checked
+	int root_size			= sb.NofDirEntries * sizeof(RECORD);
+	int entries_per_sector	= SECTOR_SIZE / sizeof(RECORD);
+	int root_sectors		= (int)(root_size / SECTOR_SIZE);
+	if (root_size % SECTOR_SIZE != 0) root_sectors++;
+
+	// alert
+	if (SECTOR_SIZE % sizeof(RECORD) != 0) puts("F: find_root_subpath");
+
+	while (result == NULL && counter < sb.NofDirEntries){
+		sector = read_sector(sb.RootSectorStart + i_sector);
+
+		for (i_entry = 0; i_entry < entries_per_sector &&
+				result == NULL && counter < sb.NofDirEntries; i_entry++){
+			buffer = sector + i_entry * sizeof(RECORD);
+
+			if (buffer->TypeVal == typeval && strcmp(buffer->name, subpath)){
+				result = malloc(sizeof(RECORD));
+				memcpy(result, buffer, sizeof(RECORD));
+			}
+
+			counter++;
+		}
+
+		free(sector);
 	}
 
-	return index;
+	return result;
 }
 
 FILE2 create2(char *filename){
@@ -338,10 +373,14 @@ DIR2 opendir2(char *pathname){
 
 	int handler = -1;
 	int i, i2, cluster;
-	char *path = absolute_path(pathname);
+	char *path;
 	char* token;
 
 	RECORD* _record;
+
+	path = absolute_path(pathname);
+	if (path == NULL)
+		return -1;
 
 	token = strtok(path, "/");
 	_record = find_root_subpath(token, TYPEVAL_DIRETORIO);
@@ -361,13 +400,16 @@ DIR2 opendir2(char *pathname){
 		if (handler >= 0){
 			open_files[handler] = malloc(sizeof(RECORD));
 			memcpy(open_files[handler], _record, sizeof(RECORD));
-
+			open_clusters[handler]		= NULL;
 			open_offset[handler]		= 0;
 			open_offsetcluster[handler]	= 0;
 		}
 	}
 
-	free(_record);
+	free(path);
+	if (_record != NULL)	free(_record);
+	if (token != NULL)		free(token);
+
 	return handler;
 }
 
