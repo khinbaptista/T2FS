@@ -17,6 +17,10 @@ BYTE* read_cluster(int clusterIndex);
 // Checks whether a file exists (0: false; 1: true)
 int file_exists(char *pathname, BYTE typeVal);
 
+// Finds (or not) a subpath in a directory file
+// Returns NULL on failure or the required RECORD description
+RECORD* find_subpath(char* subpath, int first_cluster);
+
 // Converts a path to absolute path (returns NULL on failure)
 char* absolute_path(char *pathname);
 

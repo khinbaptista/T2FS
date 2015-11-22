@@ -10,6 +10,7 @@ int main(int argc, char* argv[]){
 	identify2(ids, 40);
 	printf("\n%s\n", ids);
 
+	chdir2("/dev/nhanham/");
 	if (getcwd2(wd, 20) == 0)
 		printf("Current working directory is \"%s\"\n\n", wd);
 

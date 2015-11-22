@@ -135,7 +135,7 @@ int file_exists(char *pathname, BYTE typeVal){
 	char* step;
 
 	BYTE *b_sector	= malloc(SECTOR_SIZE);
-	BYTE* b_cluster;//	= malloc(clusterSize);
+	BYTE* b_cluster;
 	RECORD buffer;
 
 	if (path == NULL || typeVal == TYPEVAL_INVALIDO)
@@ -195,7 +195,8 @@ int file_exists(char *pathname, BYTE typeVal){
 		step = strtok(NULL, "/");
 		cluster = FAT(cluster);
 
-		if (cluster == 0 || cluster == 1 || cluster >= clusterCount){
+		if (cluster == 0 || cluster == 1 ||
+				cluster >= clusterCount && cluster < 0x0FFFF){
 			free(b_sector);
 			free(b_cluster);
 			return 0;
@@ -331,10 +332,9 @@ int rmdir2(char *pathname){
 
 DIR2 opendir2(char *pathname){
 	t2fs_init();
+	int handler = generate_handler();
+	char *path = absolute_path(pathname);
 
-	char *abs = absolute_path(pathname);
-
-	puts(abs);
 	return 0;
 }
 
@@ -358,10 +358,12 @@ int closedir2(DIR2 handle){
 int chdir2(char *pathname){
 	t2fs_init();
 
-	if (file_exists(pathname, TYPEVAL_DIRETORIO) == 1)
+	/*if (file_exists(pathname, TYPEVAL_DIRETORIO) == 1)
 		workdir = absolute_path(pathname);
 	else
-		return -1;
+		return -1;*/
+
+	workdir = absolute_path(pathname);
 
 	return 0;
 }
