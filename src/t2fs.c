@@ -289,8 +289,8 @@ BYTE* read_cluster(int cluster){
 }
 
 RECORD* find_root_subpath(char* subpath, BYTE typeval){
-	RECORD* result	= NULL, buffer	= NULL;
-	BYTE* sector	= NULL;
+	RECORD	*result, *buffer;
+	BYTE	*sector;
 
 	int i_entry, i_sector	= 0;	// indexes
 	int counter 			= 0;	// entries checked
@@ -303,11 +303,12 @@ RECORD* find_root_subpath(char* subpath, BYTE typeval){
 	if (SECTOR_SIZE % sizeof(RECORD) != 0) puts("F: find_root_subpath");
 
 	while (result == NULL && counter < sb.NofDirEntries){
-		sector = read_sector(sb.RootSectorStart + i_sector);
+		sector = malloc(sizeof(BYTE));
+		read_sector(sb.RootSectorStart + i_sector, (char*)sector);
 
 		for (i_entry = 0; i_entry < entries_per_sector &&
 				result == NULL && counter < sb.NofDirEntries; i_entry++){
-			buffer = sector + i_entry * sizeof(RECORD);
+			buffer = (RECORD*)(sector + i_entry * sizeof(RECORD));
 
 			if (buffer->TypeVal == typeval && strcmp(buffer->name, subpath)){
 				result = malloc(sizeof(RECORD));
@@ -372,7 +373,6 @@ DIR2 opendir2(char *pathname){
 	t2fs_init();
 
 	int handler = -1;
-	int i, i2, cluster;
 	char *path;
 	char* token;
 
