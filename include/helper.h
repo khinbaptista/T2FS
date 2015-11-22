@@ -20,5 +20,8 @@ int file_exists(char *pathname, BYTE typeVal);
 // Converts a path to absolute path (returns NULL on failure)
 char* absolute_path(char *pathname);
 
+// Returns the next available handler or -1 if none is available
+int generate_handler();
+
 // Returns the value of a cluster in the FAT
 WORD FAT(int cluster);
