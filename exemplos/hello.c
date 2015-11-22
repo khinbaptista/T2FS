@@ -11,8 +11,9 @@ int main(int argc, char* argv[]){
 	printf("\n%s\n", ids);
 
 	chdir2("/dev/nhanham/");
-	if (getcwd2(wd, 20) == 0)
-		printf("Current working directory is \"%s\"\n\n", wd);
-
+	if (getcwd2(wd, 20) == 0){
+		printf("Current working directory is ");
+		puts(wd);
+	}
 	return 0;
 }

@@ -65,10 +65,10 @@ int identify2(char* name, int size){
 	int length = strlen(id);
 
 	if (size >= length)
-		memcpy(name, id, length);
+		strcpy(name, id);
 	else
-		memcpy(name, id, size);
-
+		return 1;
+	
 	t2fs_init();
 	return 0;
 }
@@ -77,7 +77,7 @@ void t2fs_init(){
 	if (initialized == 0){
 		workdir = "/";
 		t2fs_readSuperblock();
-		t2fs_readFAT();
+		//t2fs_readFAT();
 
 		initialized = 1;
 	}
@@ -196,7 +196,7 @@ int file_exists(char *pathname, BYTE typeVal){
 		cluster = FAT(cluster);
 
 		if (cluster == 0 || cluster == 1 ||
-				cluster >= clusterCount && cluster < 0x0FFFF){
+				((cluster >= clusterCount) && (cluster < 0x0FFFF))){
 			free(b_sector);
 			free(b_cluster);
 			return 0;
@@ -213,12 +213,15 @@ char* absolute_path(char *pathname){
 	int wdirlength = strlen(workdir);
 	int pathlength = strlen(pathname);
 	int it;
-	char *buffer = malloc(pathlength);
-	char *token;
-	char *absolute = malloc(wdirlength + pathlength);
+	char* buffer;
+	char* token;
+	char* absolute;
 
 	if (pathname[0] != '.' && pathname[0] != '/')
 		return NULL;
+		
+	absolute	= malloc(wdirlength + pathlength);
+	buffer		= malloc(pathlength);
 
 	if (pathname[0] == '/')
 		absolute[0] = '/';
@@ -373,9 +376,9 @@ int getcwd2(char *pathname, int size){
 	int length = strlen(workdir);
 
 	if (size >= length)
-		memcpy(pathname, workdir, length);
+		strcpy(pathname, workdir);
 	else
 		return -1;
-
+puts(pathname);
 	return 0;
 }
