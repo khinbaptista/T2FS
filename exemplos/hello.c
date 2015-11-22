@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "t2fs.h"
+#include "helper.h"
 
 int main(int argc, char* argv[]){
 	char ids[40];
@@ -10,17 +11,7 @@ int main(int argc, char* argv[]){
 	identify2(ids, 40);
 	printf("Authors:\n\t%s\n\n", ids);
 
-	chdir2("/dev/nhacasa");
-	if (getcwd2(wd, 200) == 0){
-		printf("Current working directory is ");
-		puts(wd);
-	}
 	
-	chdir2("../raaawr/");
-	if (getcwd2(wd, 200) == 0){
-		printf("Current working directory is ");
-		puts(wd);
-	}
 	
 	return 0;
 }
