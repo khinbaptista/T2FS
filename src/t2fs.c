@@ -340,7 +340,7 @@ int find_record_subpath(RECORD* current, char* subpath, BYTE typeval){
 
 		for (i_sector = 0; i_sector < entries_per_sector && found == 0; i_sector++){
 			sector = malloc(SECTOR_SIZE);
-			read_sector(cluster + i_sector, (char*)sector);
+			read_sector((unsigned int)cluster + i_sector, (char*)sector);
 
 			for (i_entry = 0; i_entry < entries_per_sector && found == 0; i_entry++){
 				buffer = (RECORD*)(sector + i_entry * sizeof(RECORD));
@@ -348,7 +348,7 @@ int find_record_subpath(RECORD* current, char* subpath, BYTE typeval){
 				if (buffer->TypeVal == typeval && strcmp(buffer->name, subpath) == 0){
 					free(current);
 					current = malloc(sizeof(RECORD));
-					memcpy(current, buffer, sizeof(RECORD))
+					memcpy(current, buffer, sizeof(RECORD));
 					found = 1;
 				}
 			}
