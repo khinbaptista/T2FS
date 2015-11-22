@@ -131,83 +131,26 @@ WORD FAT(int cluster){
 }
 
 int file_exists(char *pathname, BYTE typeVal){
-	int it, it2, cluster, found = 0;
-	char* path = absolute_path(pathname);
-	char* step;
+	int handler, exists = 0;
 
-	BYTE *b_sector	= malloc(SECTOR_SIZE);
-	BYTE* b_cluster;
-	RECORD buffer;
+	if (typeVal == TYPEVAL_DIRETORIO){
+		handler = opendir2(pathname);
 
-	if (path == NULL || typeVal == TYPEVAL_INVALIDO)
-		return 0;
-
-	if  (strlen(path) == 1 && path[0] == '/')
-		return 1;
-
-	read_sector(sb.RootSectorStart, (char *)b_sector);
-	step = strtok(path, "/");
-
-	for (it = 0; it < sb.NofDirEntries && found == 0; it++){
-		memcpy(&buffer, b_sector + it * sizeof(RECORD), sizeof(RECORD));
-
-		if (strcmp(buffer.name, step) == 0 && buffer.TypeVal == typeVal)
-			found = 1;
+		if (handler >= 0){
+			closedir2(handler);
+			exists = 1;
+		}
 	}
+	else if (typeVal == TYPEVAL_REGULAR){
+		handler = open2(pathname);
 
-	if (found == 0){
-		free(b_sector);
-		return 0;
-	}
-
-	cluster = buffer.firstCluster;
-	step = strtok(NULL, "/");
-
-	while (step != NULL){
-		found = 0;
-
-		b_cluster = read_cluster(cluster);
-
-		if (b_cluster == NULL){
-			printf("Failure reading cluster %d (looking for %s)\n",
-				buffer.firstCluster, path);
-			return 0;
-		}
-
-		for (it = 0; it < sb.SectorPerCluster && found == 0; it++){
-		// for each sector in the cluster
-			memcpy(b_sector, b_cluster + it * SECTOR_SIZE, SECTOR_SIZE);
-
-			for (it2 = 0; it2 < SECTOR_SIZE / sizeof(RECORD) && found == 0; it2++){
-			// for each entry in the sector
-				memcpy(&buffer, b_sector + it2 * sizeof(RECORD), sizeof(RECORD));
-
-				if(strcmp(buffer.name, step) == 0 && buffer.TypeVal == typeVal)
-					found = 1;
-			}
-		}
-
-		if (found == 0){
-			free(b_sector);
-			free(b_cluster);
-			return 0;
-		}
-
-		step = strtok(NULL, "/");
-		cluster = FAT(cluster);
-
-		if (cluster == 0 || cluster == 1 ||
-				((cluster >= clusterCount) && (cluster < 0x0FFFF))){
-			free(b_sector);
-			free(b_cluster);
-			return 0;
+		if (handler >= 0){
+			close2(handler);
+			exists = 1;
 		}
 	}
 
-	free(b_sector);
-	free(b_cluster);
-
-	return found;
+	return exists;
 }
 
 char* absolute_path(char *pathname){
@@ -366,47 +309,47 @@ int find_record_subpath(RECORD* current, char* subpath, BYTE typeval){
 
 FILE2 create2(char *filename){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
-int delete2 (char *filename){
+int delete2(char *filename){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 FILE2 open2(char *filename){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 int close2(FILE2 handle){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 int read2(FILE2 handle, char *buffer, int size){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 int write2(FILE2 handle, char *buffer, int size){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 int seek2(FILE2 handler, unsigned int offset){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 int mkdir2(char *pathname){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 int rmdir2(char *pathname){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 DIR2 opendir2(char *pathname){
@@ -462,23 +405,21 @@ int readdir2(DIR2 handle, DIRENT2 *dentry){
 
 	//...
 
-	return 0;
+	return -1;
 }
 
 int closedir2(DIR2 handle){
 	t2fs_init();
-	return 0;
+	return -1;
 }
 
 int chdir2(char *pathname){
 	t2fs_init();
 
-	/*if (file_exists(pathname, TYPEVAL_DIRETORIO) == 1)
+	if (file_exists(pathname, TYPEVAL_DIRETORIO) == 1)
 		workdir = absolute_path(pathname);
 	else
-		return -1;*/
-
-	workdir = absolute_path(pathname);
+		return -1;
 
 	return 0;
 }
