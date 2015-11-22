@@ -77,9 +77,10 @@ void t2fs_init(){
 	if (initialized == 0){
 		workdir = "/";
 		t2fs_readSuperblock();
-		//t2fs_readFAT();
-
+		t2fs_readFAT();
+		
 		initialized = 1;
+		puts("T2FS INITIALIZED OK\n");
 	}
 }
 
@@ -102,14 +103,20 @@ void t2fs_readSuperblock(){
 	clusterSize		= SECTOR_SIZE * sb.SectorPerCluster;
 
 	clusterCount	=
-		(int)((sb.DiskSize - sb.DataSectorStart) / clusterSize);
+		(int)((sb.DiskSize - sb.DataSectorStart * SECTOR_SIZE) / clusterSize);
 
 	fatSize 		= clusterCount * 16;
 	fatSectorCount	= fatSize / SECTOR_SIZE;
 
 	if (fatSize % SECTOR_SIZE != 0) fatSectorCount++;
 
-	printf("Cluster size: %d\nCluster count: %d\n", clusterSize, clusterCount);
+	printf("\nDisk size: %d\tFirst data sector: %d\n",
+		sb.DiskSize, sb.DataSectorStart);
+
+	printf("Sector size: %d\tSectors per cluster: %d\n",
+		SECTOR_SIZE, sb.SectorPerCluster);
+	
+	printf("Cluster size: %d\tCluster count: %d\n", clusterSize, clusterCount);
 	printf("FAT size: %d, takes %d sectors\n", fatSize, fatSectorCount);
 }
 
@@ -117,7 +124,7 @@ void t2fs_readFAT(){
 	int it;
 	BYTE buffer[SECTOR_SIZE];
 
-	fat = malloc(fatSize);
+	fat = calloc(fatSize, sizeof(BYTE));
 
 	for(it = 0; it < fatSectorCount; it++){
 		read_sector(sb.pFATSectorStart + it, (char*)buffer);
@@ -219,7 +226,7 @@ char* absolute_path(char *pathname){
 
 	if (pathname[0] != '.' && pathname[0] != '/')
 		return NULL;
-		
+
 	absolute	= malloc(wdirlength + pathlength);
 	buffer		= malloc(pathlength);
 
@@ -334,8 +341,8 @@ int rmdir2(char *pathname){
 
 DIR2 opendir2(char *pathname){
 	t2fs_init();
-	int handler = generate_handler();
-	char *path = absolute_path(pathname);
+	//int handler = generate_handler();
+	//char *path = absolute_path(pathname);
 
 	return 0;
 }
@@ -378,6 +385,6 @@ int getcwd2(char *pathname, int size){
 		strcpy(pathname, workdir);
 	else
 		return -1;
-puts(pathname);
+
 	return 0;
 }

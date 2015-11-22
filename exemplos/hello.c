@@ -8,7 +8,7 @@ int main(int argc, char* argv[]){
 	char wd[200];
 
 	identify2(ids, 40);
-	printf("\n%s\n", ids);
+	printf("Authors:\n\t%s\n\n", ids);
 
 	chdir2("/dev/nhacasa");
 	if (getcwd2(wd, 200) == 0){
