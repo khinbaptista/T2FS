@@ -226,10 +226,9 @@ char* absolute_path(char *pathname){
 	if (pathname[0] == '/')
 		absolute[0] = '/';
 	else
-		memcpy(absolute, workdir, wdirlength);
+		strcpy(absolute, workdir);
 
-	memcpy(buffer, pathname, pathlength);
-
+	strcpy(buffer, pathname);
 	token = strtok(buffer, "/");
 
 	while(token != NULL){
