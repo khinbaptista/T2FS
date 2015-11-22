@@ -27,7 +27,7 @@ int file_exists(char *pathname, BYTE typeVal);
 RECORD* find_root_subpath(char* subpath, BYTE typeval);
 
 // Searches for a specific entry in a dir cluster
-RECORD* find_record_subpath(RECORD* current, char* subpath, BYTE typeval);
+int find_record_subpath(RECORD* current, char* subpath, BYTE typeval);
 
 // Finds (or not) a subpath in a directory file
 // Returns NULL on failure or the required RECORD description

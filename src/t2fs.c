@@ -303,14 +303,14 @@ RECORD* find_root_subpath(char* subpath, BYTE typeval){
 	if (SECTOR_SIZE % sizeof(RECORD) != 0) puts("F: find_root_subpath");
 
 	while (result == NULL && counter < sb.NofDirEntries){
-		sector = malloc(sizeof(BYTE));
+		sector = malloc(SECTOR_SIZE);
 		read_sector(sb.RootSectorStart + i_sector, (char*)sector);
 
 		for (i_entry = 0; i_entry < entries_per_sector &&
 				result == NULL && counter < sb.NofDirEntries; i_entry++){
 			buffer = (RECORD*)(sector + i_entry * sizeof(RECORD));
 
-			if (buffer->TypeVal == typeval && strcmp(buffer->name, subpath)){
+			if (buffer->TypeVal == typeval && strcmp(buffer->name, subpath) == 0){
 				result = malloc(sizeof(RECORD));
 				memcpy(result, buffer, sizeof(RECORD));
 			}
@@ -322,6 +322,46 @@ RECORD* find_root_subpath(char* subpath, BYTE typeval){
 	}
 
 	return result;
+}
+
+int find_record_subpath(RECORD* current, char* subpath, BYTE typeval){
+	RECORD	*buffer;
+	BYTE	*cluster, *sector;
+
+	int cluster_num = (int)current->firstCluster;
+	int i_entry, i_sector, found = 0;
+	int entries_per_sector = SECTOR_SIZE / sizeof(RECORD);
+
+	if (current->TypeVal != TYPEVAL_DIRETORIO)
+		return 0;
+
+	while (found == 0 && i_sector < sb.SectorPerCluster && cluster_num != 0x0FF){
+		cluster = read_cluster(cluster_num);
+
+		for (i_sector = 0; i_sector < entries_per_sector && found == 0; i_sector++){
+			sector = malloc(SECTOR_SIZE);
+			read_sector(cluster + i_sector, (char*)sector);
+
+			for (i_entry = 0; i_entry < entries_per_sector && found == 0; i_entry++){
+				buffer = (RECORD*)(sector + i_entry * sizeof(RECORD));
+
+				if (buffer->TypeVal == typeval && strcmp(buffer->name, subpath) == 0){
+					free(current);
+					current = malloc(sizeof(RECORD));
+					memcpy(current, buffer, sizeof(RECORD))
+					found = 1;
+				}
+			}
+
+			free(sector);
+		}
+
+		free(cluster);
+		if (found == 0)
+			cluster_num = FAT(cluster_num);
+	}
+
+	return 0;
 }
 
 FILE2 create2(char *filename){
@@ -420,7 +460,7 @@ int readdir2(DIR2 handle, DIRENT2 *dentry){
 			open_files[handle]->TypeVal != TYPEVAL_DIRETORIO)
 		return -1;
 
-	//BYTE *buffer = read_cluster(open_files[handle]->firstCluster);
+	//...
 
 	return 0;
 }
