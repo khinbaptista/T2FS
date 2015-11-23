@@ -49,5 +49,8 @@ clean:
 ex: $(LIB_DIR)/$(LIB)
 	cd ./exemplos && make clean && make
 
+run:
+	cd ./exemplos && make clean && make run
+
 ex_clean:
 	cd ./exemplos && make clean

@@ -34,7 +34,9 @@ all: $(TARGETS)
 
 %.run: %.c
 	$(CC) -o $@ $^ $(CFLAGS) -I$(INC_DIR) -L$(LIB_DIR) -lt2fs
-	./$@
+
+run: $(TARGETS)
+	./$<
 
 clean:
 	rm -rf *.run
