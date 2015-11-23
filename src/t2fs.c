@@ -40,16 +40,16 @@ int fatSectorCount;
 char* workdir;
 
 // record of open files
-RECORD* open_files[MAX_OPEN_FILES] = { NULL };
+RECORD* open_files[MAX_OPEN_FILES]		= { NULL };
 
 // one cluster open for each file
-BYTE* open_clusters[MAX_OPEN_FILES] = { NULL };
+BYTE* open_clusters[MAX_OPEN_FILES]		= { NULL };
 
-// offset of file inside open clluster
-int open_offsetcluster[MAX_OPEN_FILES] = { 0 };
+// offset of file inside open cluster
+int open_offsetcluster[MAX_OPEN_FILES]	= { 0 };
 
 // offset of open file relative to file start
-int open_offset[MAX_OPEN_FILES] = { 0 };
+int open_offset[MAX_OPEN_FILES]			= { 0 };
 
 /* ######################################## */
 /* Functions */
@@ -323,22 +323,18 @@ FILE2 open2(char *filename){
 }
 
 int close2(FILE2 handle){
-	t2fs_init();
 	return -1;
 }
 
 int read2(FILE2 handle, char *buffer, int size){
-	t2fs_init();
 	return -1;
 }
 
 int write2(FILE2 handle, char *buffer, int size){
-	t2fs_init();
 	return -1;
 }
 
 int seek2(FILE2 handler, unsigned int offset){
-	t2fs_init();
 	return -1;
 }
 
@@ -383,7 +379,7 @@ DIR2 opendir2(char *pathname){
 		if (handler >= 0){
 			open_files[handler] = malloc(sizeof(RECORD));
 			memcpy(open_files[handler], _record, sizeof(RECORD));
-			open_clusters[handler]		= NULL;
+			open_clusters[handler]		= read_cluster(_record->firstCluster);
 			open_offset[handler]		= 0;
 			open_offsetcluster[handler]	= 0;
 		}
@@ -397,19 +393,35 @@ DIR2 opendir2(char *pathname){
 }
 
 int readdir2(DIR2 handle, DIRENT2 *dentry){
-	t2fs_init();
-
 	if (handle < 0 || handle >= MAX_OPEN_FILES || open_files[handle] == NULL ||
 			open_files[handle]->TypeVal != TYPEVAL_DIRETORIO)
 		return -1;
 
-	//...
+	if (open_offsetcluster[handle] + sizeof(RECORD) > clusterSize){
+		if (open_offset[handle] + sizeof(RECORD) > open_files[handle]->bytesFileSize))
+			return -1;
 
-	return -1;
+		read_next_cluster(handle);
+	}
+
+	RECORD* record = (RECORD*)(open_clusters[handle] + open_offsetcluster[handle]);
+
+	if (record == NULL || record->Typeval == TYPEVAL_INVALIDO){
+		puts("F: readdir2");
+		return -1;
+	}
+
+	open_offsetcluster[handle]	+= sizeof(RECORD);
+	open_offset[handle]			+= sizeof(RECORD);
+
+	dentry->fileType = (int)record->TypeVal - 1;
+	strcpy(dentry->name, record->name);
+	dentry->fileSize = (unsigned long)record->bytesFileSize;
+
+	return 0;
 }
 
 int closedir2(DIR2 handle){
-	t2fs_init();
 	return -1;
 }
 

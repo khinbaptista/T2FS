@@ -20,6 +20,9 @@ void t2fs_readFAT();
 // Reads a cluster and returns the data
 BYTE* read_cluster(int clusterIndex);
 
+// Reads the next cluster into memory (overwrites previewsly open cluster)
+void read_next_cluster(int handle);
+
 // Checks whether a file exists (0: false; 1: true)
 int file_exists(char *pathname, BYTE typeVal);
 
