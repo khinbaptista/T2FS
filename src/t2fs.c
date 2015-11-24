@@ -143,13 +143,14 @@ WORD FAT(int cluster){
 
 void t2fs_readRoot(){
 	RECORD *record, *next;
-	BYTE buffer[SECTOR_SIZE] = { 0x00 };
+	BYTE *buffer;
 	int sector_it	= 0;
 	int it			= 0;
 
 	root = calloc(sizeof(RECORD), sb.NofDirEntries);
 	root_entries = 0;
 
+	buffer = calloc(SECTOR_SIZE, sizeof(char));
 	read_sector(sb.RootSectorStart, (char*)buffer);
 
 	for (it = 0; it < sb.NofDirEntries; it++){
@@ -160,7 +161,9 @@ void t2fs_readRoot(){
 
 		record = (RECORD*)(buffer + it * sizeof(RECORD));
 
-		if (record != NULL && record->TypeVal == TYPEVAL_REGULAR || record->TypeVal == TYPEVAL_DIRETORIO){
+		if (record != NULL && record->TypeVal == TYPEVAL_REGULAR ||
+				record->TypeVal == TYPEVAL_DIRETORIO){
+
 			next = (RECORD*)(root + root_entries * sizeof(RECORD));
 			
 			next->TypeVal = record->TypeVal;
@@ -520,7 +523,7 @@ int closedir2(DIR2 handle){
 	free(open_files[handle]);
 	free(open_clusters[handle]);
 
-	return -1;
+	return 0;
 }
 
 int chdir2(char *pathname){
