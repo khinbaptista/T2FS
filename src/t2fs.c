@@ -161,13 +161,17 @@ void t2fs_readRoot(){
 		}
 
 		record = (RECORD*)(buffer + it * sizeof(RECORD));
-		memcpy(root + it * sizeof(RECORD), record, sizeof(RECORD));
-
-		if (debug == 1)
-			printf("\n(read_root) Root dir entry: %s\n", record->name);
+		
+		if (record->TypeVal != TYPEVAL_INVALIDO){
+			memcpy(root + it * sizeof(RECORD), record, sizeof(RECORD));
+		
+			if (debug == 1)
+				printf("\t(read_root) Root dir entry: %s\n", record->name);
+		
+		}
 	}
 
-//	free(buffer);
+	free(buffer);
 }
 
 int file_exists(char *pathname, BYTE typeVal){
