@@ -11,7 +11,7 @@ int main(int argc, char* argv[]){
 	identify2(ids, 40);
 	printf("Authors:\n\t%s\n\n", ids);
 
-	dir = opendir2("/");
+	dir = opendir2("/subdir/");
 	printf("Directory open: %d\n", dir);
 	closedir2(dir);
 	

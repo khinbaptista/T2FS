@@ -102,14 +102,10 @@ void t2fs_readSuperblock(){
 	memcpy(&sb.RootSectorStart,		buffer + 28,	4);
 	memcpy(&sb.DataSectorStart,		buffer + 32,	4);
 	memcpy(&sb.NofDirEntries,		buffer + 36,	4);
-	/* so very nice to know that neither in gdb nor in valgrind
-		works when reading the fake disk */
 
 	clusterSize		= SECTOR_SIZE * sb.SectorPerCluster;
-
 	clusterCount	=
 		(int)((sb.DiskSize - sb.DataSectorStart * SECTOR_SIZE) / clusterSize);
-
 	fatSize 		= clusterCount * 16;
 	fatSectorCount	= fatSize / SECTOR_SIZE;
 
@@ -129,7 +125,7 @@ void t2fs_readSuperblock(){
 
 void t2fs_readFAT(){
 	int it;
-	BYTE buffer[SECTOR_SIZE];
+	BYTE buffer[SECTOR_SIZE] = { 0 };
 
 	fat = calloc(fatSize, sizeof(BYTE));
 
@@ -146,12 +142,12 @@ WORD FAT(int cluster){
 }
 
 void t2fs_readRoot(){
-	RECORD* record;
-	BYTE* buffer	= malloc(SECTOR_SIZE);
+	RECORD *record, *next;
+	BYTE buffer[SECTOR_SIZE] = { 0x00 };
 	int sector_it	= 0;
 	int it			= 0;
 
-	root = malloc(sizeof(RECORD) * sb.NofDirEntries);
+	root = calloc(sizeof(RECORD), sb.NofDirEntries);
 	root_entries = 0;
 
 	read_sector(sb.RootSectorStart, (char*)buffer);
@@ -164,16 +160,22 @@ void t2fs_readRoot(){
 
 		record = (RECORD*)(buffer + it * sizeof(RECORD));
 
-		if (record->TypeVal != TYPEVAL_INVALIDO){
-			memcpy(root + it * sizeof(RECORD), record, sizeof(RECORD));
+		if (record != NULL && record->TypeVal == TYPEVAL_REGULAR || record->TypeVal == TYPEVAL_DIRETORIO){
+			next = (RECORD*)(root + root_entries * sizeof(RECORD));
+			
+			next->TypeVal = record->TypeVal;
+			strcpy(next->name, record->name);
+			next->bytesFileSize = record->bytesFileSize;
+			next->firstCluster = record->firstCluster;
+
 			root_entries++;
 
 			if (debug == 1)
-				printf("\t(read_root) Root dir entry: %s\n", record->name);
+				printf("\t(read_root) Root dir entry: %s\n", next->name);
 		}
 	}
 
-	free(buffer);
+	if (debug == 1) printf("Root valid entries: %d\n", root_entries);
 }
 
 int file_exists(char *pathname, BYTE typeVal){
@@ -203,7 +205,7 @@ char* absolute_path(char *pathname){
 	int wdirlength = strlen(workdir);
 	int pathlength = strlen(pathname);
 	int it;
-	char* buffer;
+	char buffer[pathlength];
 	char* token;
 	char* absolute;
 
@@ -211,10 +213,9 @@ char* absolute_path(char *pathname){
 		return NULL;
 
 	absolute	= calloc(wdirlength + pathlength, sizeof(char));
-	buffer		= calloc(pathlength, sizeof(char));
 
 	if (pathname[0] == '/')
-		absolute[0] = '/';
+		absolute[0] = '\0';
 	else
 		strcpy(absolute, workdir);
 
@@ -222,6 +223,8 @@ char* absolute_path(char *pathname){
 	token = strtok(buffer, "/");
 
 	while(token != NULL){
+		strcat(absolute, "/");
+	
 		if (strcmp(token, ".") == 0){
 			// current directory
 			token = strtok(NULL, "/");
@@ -239,7 +242,6 @@ char* absolute_path(char *pathname){
 		}
 		else {
 			strcat(absolute, token);
-			strcat(absolute, "/");
 
 			token = strtok(NULL, "/");
 		}
@@ -261,6 +263,7 @@ int generate_handler(){
 }
 
 BYTE* read_cluster(int cluster){
+	BYTE *pointer;
 	BYTE *buffer = malloc(clusterSize);
 	int it;
 
@@ -270,8 +273,10 @@ BYTE* read_cluster(int cluster){
 	cluster -= 2;
 
 	for (it = 0; it < sb.SectorPerCluster; it++) {
+		pointer = buffer + it * SECTOR_SIZE;
+
 		read_sector(sb.DataSectorStart + cluster * sb.SectorPerCluster + it,
-					(char *)(buffer + it * SECTOR_SIZE));
+					(char*)pointer);
 	}
 
 	return buffer;
@@ -298,9 +303,10 @@ RECORD* find_root_subpath(char* subpath, BYTE typeval){
 		buffer = (RECORD*)(root + it * sizeof(RECORD));
 
 		if (buffer != NULL && buffer->TypeVal == typeval &&
-				strcmp(buffer->name, subpath)){
+				strcmp(buffer->name, subpath) == 0){
 
 			found = 1;
+			printf("\n\t(find_root_subpath) Found subpath '%s'\n", subpath);
 
 			result = malloc(sizeof(RECORD));
 			memcpy(result, buffer, sizeof(RECORD));
@@ -414,7 +420,7 @@ DIR2 opendir2(char *pathname){
 
 	if (token == NULL){
 		if (debug == 1)
-			printf("\t(opendir2)First token is null, the user is opening root dir\n");
+			printf("\t(opendir2) First token is null, the user is opening root dir\n");
 
 		handler = MAX_OPEN_FILES;
 		root_offset = 0;
@@ -423,11 +429,7 @@ DIR2 opendir2(char *pathname){
 	}
 
 	_record = find_root_subpath(token, TYPEVAL_DIRETORIO);
-	if (_record == NULL)	// maybe this is not necessary
-		return -1;
-
-	if (debug == 1) printf("Found subpath in root");
-
+	
 	token = strtok(NULL, "/");
 
 	while(token != NULL && _record != NULL){
@@ -438,7 +440,7 @@ DIR2 opendir2(char *pathname){
 	if (token == NULL && _record != NULL){	// found it!
 		handler = generate_handler();
 
-		if (handler >= 0){
+		if (handler >= 0){printf("First cluster: %d\n", _record->firstCluster);
 			open_files[handler] = malloc(sizeof(RECORD));
 			memcpy(open_files[handler], _record, sizeof(RECORD));
 			open_cluster_num[handler]	= _record->firstCluster;
@@ -449,6 +451,7 @@ DIR2 opendir2(char *pathname){
 	}
 
 	free(path);
+
 	if (_record != NULL)	free(_record);
 	if (token != NULL)		free(token);
 
