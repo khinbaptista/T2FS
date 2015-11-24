@@ -79,6 +79,7 @@ void t2fs_init(){
 		workdir = "/";
 		t2fs_readSuperblock();
 		t2fs_readFAT();
+		t2fs_readRoot();
 
 		initialized = 1;
 		if (debug == 1) puts("T2FS INITIALIZED OK\n");
@@ -154,7 +155,7 @@ void t2fs_readRoot(){
 	read_sector(sb.RootSectorStart, (char*)buffer);
 
 	for (it = 0; it < sb.NofDirEntries; it++){
-		if (sizeof(RECORD) * it >= SECTOR_SIZE){
+		if (sizeof(RECORD) * sector_it >= SECTOR_SIZE){
 			read_sector(sb.RootSectorStart + sector_it, (char*)buffer);
 			sector_it++;
 		}
@@ -279,6 +280,8 @@ int read_next_cluster(int handle){
 	open_cluster_num[handle] = cluster;
 	free(open_clusters[handle]);
 	open_clusters[handle] = read_cluster(cluster);
+	
+	return 0;
 }
 
 RECORD* find_root_subpath(char* subpath, BYTE typeval){
@@ -342,7 +345,7 @@ int find_record_subpath(RECORD* current, char* subpath, BYTE typeval){
 				buffer = (RECORD*)(sector + i_entry * sizeof(RECORD));
 
 				if (debug == 1)
-					printf("(find_record_subpath) Entry: $s\n", buffer->name);
+					printf("(find_record_subpath) Entry: %s\n", buffer->name);
 
 				if (buffer->TypeVal == typeval && strcmp(buffer->name, subpath) == 0){
 					free(current);
@@ -465,7 +468,7 @@ DIR2 opendir2(char *pathname){
 	return handler;
 }
 
-int user_read_root(DIRENT *dentry){
+int user_read_root(DIRENT2 *dentry){
 	RECORD* buffer;
 
 	if (root_offset >= sb.NofDirEntries){
