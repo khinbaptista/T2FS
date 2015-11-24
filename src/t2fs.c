@@ -167,7 +167,7 @@ void t2fs_readRoot(){
 			printf("\n(read_root) Root dir entry: %s\n", record->name);
 	}
 
-	free(buffer);
+//	free(buffer);
 }
 
 int file_exists(char *pathname, BYTE typeVal){
