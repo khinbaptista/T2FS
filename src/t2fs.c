@@ -51,6 +51,7 @@ BYTE* open_clusters[MAX_OPEN_FILES]		= { NULL };
 
 RECORD *root;
 int root_offset = 0;	// in entries (not bytes)
+int root_entries = 0;	// actual entryes (not total space available)
 
 // offset of file inside open cluster
 int open_offsetcluster[MAX_OPEN_FILES]	= { 0 };
@@ -151,6 +152,7 @@ void t2fs_readRoot(){
 	int it			= 0;
 
 	root = malloc(sizeof(RECORD) * sb.NofDirEntries);
+	root_entries = 0;
 
 	read_sector(sb.RootSectorStart, (char*)buffer);
 
@@ -161,13 +163,13 @@ void t2fs_readRoot(){
 		}
 
 		record = (RECORD*)(buffer + it * sizeof(RECORD));
-		
+
 		if (record->TypeVal != TYPEVAL_INVALIDO){
 			memcpy(root + it * sizeof(RECORD), record, sizeof(RECORD));
-		
+			root_entries++;
+
 			if (debug == 1)
 				printf("\t(read_root) Root dir entry: %s\n", record->name);
-		
 		}
 	}
 
@@ -284,44 +286,25 @@ int read_next_cluster(int handle){
 	open_cluster_num[handle] = cluster;
 	free(open_clusters[handle]);
 	open_clusters[handle] = read_cluster(cluster);
-	
+
 	return 0;
 }
 
 RECORD* find_root_subpath(char* subpath, BYTE typeval){
 	RECORD	*result, *buffer;
-	BYTE	*sector;
+	int it, found = 0;
 
-	int i_entry, i_sector	= 0;	// indexes
-	int counter 			= 0;	// entries checked
-	int root_size			= sb.NofDirEntries * sizeof(RECORD);
-	int entries_per_sector	= SECTOR_SIZE / sizeof(RECORD);
-	int root_sectors		= (int)(root_size / SECTOR_SIZE);
-	if (root_size % SECTOR_SIZE != 0) root_sectors++;
+	for (it = 0; it < root_entries && found == 0; it++){
+		buffer = (RECORD*)(root + it * sizeof(RECORD));
 
-	// alert
-	if (SECTOR_SIZE % sizeof(RECORD) != 0) puts("F: find_root_subpath");
+		if (buffer != NULL && buffer->TypeVal == typeval &&
+				strcmp(buffer->name, subpath)){
 
-	while (result == NULL && counter < sb.NofDirEntries){
-		sector = malloc(SECTOR_SIZE);
-		read_sector(sb.RootSectorStart + i_sector, (char*)sector);
+			found = 1;
 
-		for (i_entry = 0; i_entry < entries_per_sector &&
-				result == NULL && counter < sb.NofDirEntries; i_entry++){
-			buffer = (RECORD*)(sector + i_entry * sizeof(RECORD));
-
-			if (debug == 1)
-				printf("(find_root_subpath)Entry: %s\n", buffer->name);
-
-			if (buffer->TypeVal == typeval && strcmp(buffer->name, subpath) == 0){
-				result = malloc(sizeof(RECORD));
-				memcpy(result, buffer, sizeof(RECORD));
-			}
-
-			counter++;
+			result = malloc(sizeof(RECORD));
+			memcpy(result, buffer, sizeof(RECORD));
 		}
-
-		free(sector);
 	}
 
 	return result;
