@@ -17,11 +17,18 @@ void t2fs_readSuperblock();
 // Read the primary FAT into memory
 void t2fs_readFAT();
 
+// Read root dir into memory
+void t2fs_readRoot();
+
+// use this to read an entry from root (root is special)
+int user_read_root(DIRENT2 *dentry);
+
 // Reads a cluster and returns the data
 BYTE* read_cluster(int clusterIndex);
 
 // Reads the next cluster into memory (overwrites previewsly open cluster)
-void read_next_cluster(int handle);
+// returns -1 if EOF
+int read_next_cluster(int handle);
 
 // Checks whether a file exists (0: false; 1: true)
 int file_exists(char *pathname, BYTE typeVal);
