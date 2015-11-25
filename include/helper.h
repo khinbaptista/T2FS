@@ -17,6 +17,9 @@ void t2fs_readSuperblock();
 // Read the primary FAT into memory
 void t2fs_readFAT();
 
+// Writes FAT into the disk (primary FAT first, then secondary FAT)
+int t2fs_writeFAT();
+
 // Read root dir into memory
 void t2fs_readRoot();
 
@@ -51,3 +54,6 @@ int generate_handler();
 
 // Returns the value of a cluster in the FAT
 WORD FAT(int cluster);
+
+// Returns the index of a free cluster
+int find_free_cluster();

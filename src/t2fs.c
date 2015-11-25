@@ -137,6 +137,28 @@ void t2fs_readFAT(){
 	if (debug == 1) printf("FAT read.\n");
 }
 
+int t2fs_writeFAT(){
+	int i, p = 0, s = 0;
+	// status of writing Primary and Secondary FATs into disk
+
+	for (i = 0; i < fatSectorCount && p == 0; i++)
+		p =
+			write_sector(sb.pFATSectorStart + it, (char*)fat + it * SECTOR_SIZE);
+
+	if (p == 0){	// nothing went wrong
+		for (i = 0; i < fatSectorCount && s == 0; i++)
+			s =
+				write_sector(sb.sFATSectorStart + it, (char*)fat + it * SECTOR_SIZE);
+	}
+
+	if (s != 0)
+		s = -2;
+
+	// -1 means error writing primary FAT
+	// -2 means error writing secondary FAT
+	return p + s;
+}
+
 WORD FAT(int cluster){
 	return fat[(cluster - 2) * 16];
 }
@@ -165,7 +187,7 @@ void t2fs_readRoot(){
 				record->TypeVal == TYPEVAL_DIRETORIO){
 
 			next = (RECORD*)(root + root_entries * sizeof(RECORD));
-			
+
 			next->TypeVal = record->TypeVal;
 			strcpy(next->name, record->name);
 			next->bytesFileSize = record->bytesFileSize;
@@ -227,7 +249,7 @@ char* absolute_path(char *pathname){
 
 	while(token != NULL){
 		strcat(absolute, "/");
-	
+
 		if (strcmp(token, ".") == 0){
 			// current directory
 			token = strtok(NULL, "/");
@@ -296,6 +318,21 @@ int read_next_cluster(int handle){
 	open_clusters[handle] = read_cluster(cluster);
 
 	return 0;
+}
+
+int find_free_cluster(){
+	int found = 0, i;
+
+	for (i = 2; i < clusterCount && found == 0; i++){
+		if (FAT(i) == 0)
+			found = 1;
+	}
+
+
+	if (found == 1)
+		return i - 1;
+	else
+		return -1;
 }
 
 RECORD* find_root_subpath(char* subpath, BYTE typeval){
@@ -395,7 +432,16 @@ int seek2(FILE2 handler, unsigned int offset){
 
 int mkdir2(char *pathname){
 	t2fs_init();
-	return -1;
+
+	RECORD new_dir;
+	int free_cluster = find_free_cluster();
+
+	if (free_cluster == -1)
+		return -1;
+
+	fat[(free_cluster - 2) * 16] = 0x0FF;
+
+	return t2fs_writeFAT();
 }
 
 int rmdir2(char *pathname){
@@ -432,7 +478,7 @@ DIR2 opendir2(char *pathname){
 	}
 
 	_record = find_root_subpath(token, TYPEVAL_DIRETORIO);
-	
+
 	token = strtok(NULL, "/");
 
 	while(token != NULL && _record != NULL){
