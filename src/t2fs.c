@@ -446,7 +446,22 @@ int mkdir2(char *pathname){
 
 int rmdir2(char *pathname){
 	t2fs_init();
-	return -1;
+
+	if (file_exists(pathname, TYPEVAL_DIRETORIO) == 0)
+		return -1;
+
+	int handle, cluster;
+
+	handle = opendir2(pathname);
+	cluster = open_files[handle]->firstCluster;
+	closedir2(handle);
+
+	while (cluster != 0x0FF){
+		fat[(cluster - 2) * 16] = 0;
+		cluster = FAT(cluster);
+	}
+
+	return t2fs_writeFAT();
 }
 
 DIR2 opendir2(char *pathname){
