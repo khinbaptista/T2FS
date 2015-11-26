@@ -55,6 +55,8 @@ RECORD* find_subpath(char* subpath, int first_cluster);
 // Converts a path to absolute path (returns NULL on failure)
 char* absolute_path(char *pathname);
 
+char* up_directory(char *pathname);
+
 // Returns the next available handler or -1 if none is available
 int generate_handler();
 

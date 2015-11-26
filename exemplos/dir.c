@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "t2fs.h"
-#include "helper.h"
 
 int main(int argc, char* argv[]){
 	char ids[40];
@@ -19,6 +18,6 @@ int main(int argc, char* argv[]){
 		printf("%d: %s\n", dentry.fileType, dentry.name);
 
 	printf("\nClosing dir: %d\n", closedir2(dir));
-	
+
 	return 0;
 }

@@ -293,6 +293,17 @@ char* absolute_path(char *pathname){
 	return absolute;
 }
 
+char* up_directory(char *pathname){
+	char *path = absolute_path(pathname);
+	int it = strlen(path);
+
+	while (path[it] != '/' && it >= 0) it--;
+
+	path[it + 1] = '\0';
+
+	return path;
+}
+
 int generate_handler(){
 	int it;
 	int index = -1;
@@ -473,8 +484,6 @@ FILE2 create2(char *filename){
 		root_entries++;
 		status = write_root();
 
-
-
 		if (status != 0)
 			return -1;
 
@@ -514,11 +523,42 @@ int delete2(char *filename){
 
 FILE2 open2(char *filename){
 	t2fs_init();
+
+	char *path		= absolute_path(filename);
+	char *token		= strtok(path, "/");
+	char *parent	= up_directory(path);
+	RECORD *buffer;//	= malloc(sizeof(RECORD));
+
+	if (strtok(NULL, "/") == NULL)
+		buffer = find_root_subpath(token, TYPEVAL_REGULAR);
+	else
+		buffer = find_root_subpath(token, TYPEVAL_DIRETORIO);
+
+	strtok(path, "/");
+	token = strtok(NULL, "/");
+
+	while (token != NULL){
+		find_record_subpath(buffer, )
+
+		token = strtok(NULL, "/");
+	}
+
 	return -1;
 }
 
 int close2(FILE2 handle){
-	return -1;
+	if (handle < 0 || handle >= MAX_OPEN_FILES || open_files[handle] == NULL ||
+			open_files[handle]->TypeVal != TYPEVAL_REGULAR)
+		return -1;
+
+	int status = write_cluster(open_cluster_num[handle], open_clusters[handle]);
+
+	if (status == 0){
+		free(open_files[handle]);
+		free(open_clusters[handle]);
+	}
+
+	return status;
 }
 
 int read2(FILE2 handle, char *buffer, int size){
@@ -537,6 +577,7 @@ int mkdir2(char *pathname){
 	t2fs_init();
 
 	RECORD new_dir;
+	char *path;
 	int free_cluster = find_free_cluster();
 
 	if (free_cluster == -1)
@@ -544,7 +585,12 @@ int mkdir2(char *pathname){
 
 	fat[(free_cluster - 2) * 16] = 0x0FF;
 
-	// Incomplete
+	if (t2fs_writeFAT() == 0){
+		path = up_directory(pathname);
+
+		// TODO write record in parent dir
+	}
+	else return -1;
 
 	return t2fs_writeFAT();
 }
@@ -565,6 +611,8 @@ int rmdir2(char *pathname){
 		fat[(cluster - 2) * 16] = 0;
 		cluster = FAT(cluster);
 	}
+
+	// TODO remove entry from parent dir
 
 	return t2fs_writeFAT();
 }
