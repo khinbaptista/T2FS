@@ -1,15 +1,13 @@
 *.o
 *.so
 *.a
+*.run
 *.pdf
 
 .fuse_hidden*
-
-exemplos/
-!exemplos/*.c
-!exemplos/Makefile
 
 testes/*.run
 
 disks/
 *.dsk
+*.dat
