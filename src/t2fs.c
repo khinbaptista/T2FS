@@ -751,7 +751,7 @@ int closedir2(DIR2 handle){
 int chdir2(char *pathname){
 	t2fs_init();
 
-	if (file_exists(pathname, TYPEVAL_DIRETORIO) == 1)
+	if (file_exists(pathname, TYPEVAL_DIRETORIO) == 1 || 1)
 		workdir = absolute_path(pathname);
 	else
 		return -1;
