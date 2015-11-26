@@ -203,6 +203,24 @@ void t2fs_readRoot(){
 	if (debug == 1) printf("Root valid entries: %d\n", root_entries);
 }
 
+int write_root(){
+	int root_sector_count = 1;
+	int status = 0;
+
+	if (root_entries * sizeof(RECORD) > SECTOR_SIZE){
+		root_sector_count = (root_entries * sizeof(RECORD)) / SECTOR_SIZE;
+
+		if ((root_entries * sizeof(RECORD)) % SECTOR_SIZE != 0)
+			root_sector_count++;
+	}
+
+	for (int i = 0; i < root_sector_count && status == 0; i++)
+		status = write_sector(sb.RootSectorStart + i,
+			(char*)root + i * SECTOR_SIZE);
+
+	return status;
+}
+
 int file_exists(char *pathname, BYTE typeVal){
 	int handler, exists = 0;
 
@@ -300,8 +318,8 @@ BYTE* read_cluster(int cluster){
 	for (it = 0; it < sb.SectorPerCluster; it++) {
 		pointer = buffer + it * SECTOR_SIZE;
 
-		read_sector(sb.DataSectorStart + cluster * sb.SectorPerCluster + it,
-					(char*)pointer);
+		read_sector(sb.DataSectorStart + cluster *
+					sb.SectorPerCluster + it, (char*)pointer);
 	}
 
 	return buffer;
@@ -318,6 +336,18 @@ int read_next_cluster(int handle){
 	open_clusters[handle] = read_cluster(cluster);
 
 	return 0;
+}
+
+int write_cluster(int cluster, BYTE* data){
+	int status = 0;
+
+	cluster -= 2;
+
+	for (int sector = 0; sector < sb.SectorPerCluster && status == 0; sector++)
+		status = write_sector(sb.DataSectorStart + cluster * sb.SectorPerCluster
+			+ sector, (char*)data + sector * SECTOR_SIZE);
+
+	return status;
 }
 
 int find_free_cluster(){
@@ -401,6 +431,79 @@ int find_record_subpath(RECORD* current, char* subpath, BYTE typeval){
 
 FILE2 create2(char *filename){
 	t2fs_init();
+
+	if (file_exists(filename, TYPEVAL_REGULAR) == 1)
+		return -1; // file already exists
+
+	RECORD file, *record;
+	char *path, *name;
+	int dir = -1, status = 0, handle;
+	DIRENT2 dir_buffer;
+
+	path = absolute_path(filename);
+	if (path == NULL) return -1;
+	path = absolute_path(strcat(pathm "/../"));
+	if (path == NULL) return -1;
+
+	name = absolute_path(filename);
+	if (name == NULL) return -1;
+
+	for (int found = 0, i = strlen(name) - 2; i >= 0 && found == 0; i--)
+		if (name[i] == '/'){
+			found = 1;
+			strcpy(name, name[i + 1]);
+		}
+
+	file.TypeVal		= TYPEVAL_REGULAR;
+	file.firstCluster	= find_free_cluster();
+	file.bytesFileSize	= 0;
+	strcpy(&file.name, name);
+
+	fat[(file.firstCluster - 2) * 16] = 0x0FF;
+
+	dir = opendir2(path);
+
+	if (dir == MAX_OPEN_FILES){		// root dir is special
+		record = root + root_entries * sizeof(RECORD);
+		record->TypeVal			= file.TypeVal;
+		record->firstCluster	= file.firstCluster;
+		record->bytesFileSize	= file.bytesFileSize;
+		strcpy(record->name, file.name);
+
+		root_entries++;
+		status = write_root();
+
+
+
+		if (status != 0)
+			return -1;
+
+		handle = generate_handler();
+	}
+
+	// point to last entry in dir
+	while (readdir2(dir, dir_buffer) == 0);
+	open_offsetcluster[dir]	+= sizeof(RECORD);
+	open_offset[dir]		+= sizeof(RECORD);
+
+	if (status == 0)
+		status = t2fs_writeFAT();
+
+	if (status == 0 && handler >= 0){
+		record = open_files[handle];
+		record->TypeVal			= file.TypeVal;
+		record->firstCluster	= file.firstCluster;
+		record->bytesFileSize	= file.bytesFileSize;
+		strcpy(record->name, file.name);
+
+		open_cluster_num[handle] = file.firstCluster;
+		open_clusters[handle] = read_cluster(file.firstCluster);
+		open_offset[handle] = 0;
+		open_offsetcluster[handle] = 0;
+
+		return handle;
+	}
+
 	return -1;
 }
 
@@ -440,6 +543,8 @@ int mkdir2(char *pathname){
 		return -1;
 
 	fat[(free_cluster - 2) * 16] = 0x0FF;
+
+	// Incomplete
 
 	return t2fs_writeFAT();
 }
@@ -559,10 +664,15 @@ int readdir2(DIR2 handle, DIRENT2 *dentry){
 		return -1;
 	}
 
+	// Respect file size
+	if (open_offsetcluster[handle] * clusterSize + open_offset[handle] >=
+			open_files[handle]->bytesFileSize)
+		return -1;
+
 	RECORD* record = (RECORD*)(open_clusters[handle] + open_offsetcluster[handle]);
 
 	if (record == NULL || record->TypeVal == TYPEVAL_INVALIDO){
-		puts("F: readdir2");
+		puts("F: readdir2 eof");
 		return -1;
 	}
 
@@ -580,6 +690,8 @@ int closedir2(DIR2 handle){
 	if (handle < 0 || handle >= MAX_OPEN_FILES || open_files[handle] == NULL ||
 			open_files[handle]->TypeVal != TYPEVAL_DIRETORIO)
 		return -1;
+
+	write_cluster(open_cluster_num[handle], open_clusters[handle]);
 
 	free(open_files[handle]);
 	free(open_clusters[handle]);

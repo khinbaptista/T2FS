@@ -26,12 +26,18 @@ void t2fs_readRoot();
 // use this to read an entry from root (root is special)
 int user_read_root(DIRENT2 *dentry);
 
+// Writes root data into disk
+int write_root();
+
 // Reads a cluster and returns the data
 BYTE* read_cluster(int clusterIndex);
 
 // Reads the next cluster into memory (overwrites previewsly open cluster)
 // returns -1 if EOF
 int read_next_cluster(int handle);
+
+// Writes an entire cluster
+int write_cluster(int cluster, BYTE* data);
 
 // Checks whether a file exists (0: false; 1: true)
 int file_exists(char *pathname, BYTE typeVal);
