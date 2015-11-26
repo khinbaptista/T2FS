@@ -39,6 +39,7 @@ all: $(LIB_DIR)/$(LIB)
 
 $(LIB_DIR)/$(LIB): $(OBJECTS)
 	ar crs $@ $^
+	rm -rf $(BIN_DIR)/*.o
 
 $(BIN_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c -o $@ $^ -I$(INC_DIR) $(CFLAGS)
@@ -46,11 +47,3 @@ $(BIN_DIR)/%.o: $(SRC_DIR)/%.c
 clean:
 	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
 
-ex: $(LIB_DIR)/$(LIB)
-	cd ./exemplos && make clean && make
-
-run:
-	cd ./exemplos && make clean && make run
-
-ex_clean:
-	cd ./exemplos && make clean

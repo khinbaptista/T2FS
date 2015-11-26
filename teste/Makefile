@@ -24,15 +24,15 @@ BIN_DIR = ../bin
 #################################################
 # Each source must be a complete program with a test
 
-SRC = hello.c
+SRC = dir.c
 
-TARGETS = $(SRC:.c=.run)
+TARGETS = $(BIN_DIR)/$(SRC:.c=.run)
 
 #################################################
 
 all: $(TARGETS)
 
-%.run: %.c
+$(BIN_DIR)/%.run: %.c
 	$(CC) -o $@ $^ $(CFLAGS) -I$(INC_DIR) -L$(LIB_DIR) -lt2fs
 
 run: $(TARGETS)

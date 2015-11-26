@@ -143,12 +143,12 @@ int t2fs_writeFAT(){
 
 	for (i = 0; i < fatSectorCount && p == 0; i++)
 		p =
-			write_sector(sb.pFATSectorStart + it, (char*)fat + it * SECTOR_SIZE);
+			write_sector(sb.pFATSectorStart + i, (char*)fat + i * SECTOR_SIZE);
 
 	if (p == 0){	// nothing went wrong
 		for (i = 0; i < fatSectorCount && s == 0; i++)
 			s =
-				write_sector(sb.sFATSectorStart + it, (char*)fat + it * SECTOR_SIZE);
+				write_sector(sb.sFATSectorStart + i, (char*)fat + i * SECTOR_SIZE);
 	}
 
 	if (s != 0)
@@ -183,7 +183,8 @@ void t2fs_readRoot(){
 
 		record = (RECORD*)(buffer + it * sizeof(RECORD));
 
-		if (record != NULL && record->TypeVal == TYPEVAL_REGULAR ||
+		if (record != NULL)
+			if (record->TypeVal == TYPEVAL_REGULAR ||
 				record->TypeVal == TYPEVAL_DIRETORIO){
 
 			next = (RECORD*)(root + root_entries * sizeof(RECORD));
@@ -453,7 +454,7 @@ FILE2 create2(char *filename){
 
 	path = absolute_path(filename);
 	if (path == NULL) return -1;
-	path = absolute_path(strcat(pathm "/../"));
+	path = absolute_path(strcat(path, "/../"));
 	if (path == NULL) return -1;
 
 	name = absolute_path(filename);
@@ -462,13 +463,13 @@ FILE2 create2(char *filename){
 	for (int found = 0, i = strlen(name) - 2; i >= 0 && found == 0; i--)
 		if (name[i] == '/'){
 			found = 1;
-			strcpy(name, name[i + 1]);
+			strcpy(name, name + i + 1);
 		}
 
 	file.TypeVal		= TYPEVAL_REGULAR;
 	file.firstCluster	= find_free_cluster();
 	file.bytesFileSize	= 0;
-	strcpy(&file.name, name);
+	strcpy(file.name, name);
 
 	fat[(file.firstCluster - 2) * 16] = 0x0FF;
 
@@ -491,14 +492,14 @@ FILE2 create2(char *filename){
 	}
 
 	// point to last entry in dir
-	while (readdir2(dir, dir_buffer) == 0);
+	while (readdir2(dir, &dir_buffer) == 0);
 	open_offsetcluster[dir]	+= sizeof(RECORD);
 	open_offset[dir]		+= sizeof(RECORD);
 
 	if (status == 0)
 		status = t2fs_writeFAT();
 
-	if (status == 0 && handler >= 0){
+	if (status == 0 && handle >= 0){
 		record = open_files[handle];
 		record->TypeVal			= file.TypeVal;
 		record->firstCluster	= file.firstCluster;
@@ -526,8 +527,8 @@ FILE2 open2(char *filename){
 
 	char *path		= absolute_path(filename);
 	char *token		= strtok(path, "/");
-	char *parent	= up_directory(path);
-	RECORD *buffer;//	= malloc(sizeof(RECORD));
+	//char *parent	= up_directory(path);
+	RECORD *buffer;
 
 	if (strtok(NULL, "/") == NULL)
 		buffer = find_root_subpath(token, TYPEVAL_REGULAR);
@@ -538,7 +539,7 @@ FILE2 open2(char *filename){
 	token = strtok(NULL, "/");
 
 	while (token != NULL){
-		find_record_subpath(buffer, )
+		//find_record_subpath(buffer, )
 
 		token = strtok(NULL, "/");
 	}
@@ -576,8 +577,8 @@ int seek2(FILE2 handler, unsigned int offset){
 int mkdir2(char *pathname){
 	t2fs_init();
 
-	RECORD new_dir;
-	char *path;
+	//RECORD new_dir;
+	//char *path;
 	int free_cluster = find_free_cluster();
 
 	if (free_cluster == -1)
@@ -586,7 +587,7 @@ int mkdir2(char *pathname){
 	fat[(free_cluster - 2) * 16] = 0x0FF;
 
 	if (t2fs_writeFAT() == 0){
-		path = up_directory(pathname);
+		//path = up_directory(pathname);
 
 		// TODO write record in parent dir
 	}
