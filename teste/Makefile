@@ -39,4 +39,4 @@ run: $(TARGETS)
 	./$<
 
 clean:
-	rm -rf *.run
+	rm -rf $(BIN_DIR)/*.run
